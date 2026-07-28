@@ -1,0 +1,19 @@
+{
+  "name": "whatsapp-onchain-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot for in-depth onchain research on crypto tokens by contract address",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
