@@ -1,0 +1,83 @@
+function fmtUsd(n) {
+  if (n === undefined || n === null) return "N/A";
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${Number(n).toFixed(2)}`;
+}
+
+function ageFromTimestamp(ts) {
+  if (!ts) return "Unknown";
+  const days = Math.floor((Date.now() - ts) / 86_400_000);
+  if (days < 1) return "<1 day";
+  if (days === 1) return "1 day";
+  if (days < 30) return `${days} days`;
+  return `${Math.floor(days / 30)} months`;
+}
+
+/**
+ * Very simple heuristic scorer — 0 (worst) to 10 (best).
+ * Tune weights as you gather more real-world signal.
+ */
+function scoreRisk(dex, sec) {
+  let score = 5;
+  if (!dex || !sec) return null;
+
+  if (sec.isHoneypot) score -= 5;
+  if (sec.ownershipRenounced) score += 1.5;
+  if (sec.isOpenSource) score += 1;
+  if (sec.isMintable) score -= 1;
+  if (sec.canBlacklist) score -= 1;
+  if (sec.lpLocked) score += 1.5;
+
+  const sellTax = parseFloat(sec.sellTax || 0);
+  if (sellTax > 10) score -= 2;
+  else if (sellTax > 5) score -= 1;
+
+  const top10 = parseFloat(sec.top10HolderPct || 0);
+  if (top10 > 50) score -= 2;
+  else if (top10 > 30) score -= 1;
+
+  if ((dex.liquidityUsd || 0) < 5000) score -= 2;
+  else if ((dex.liquidityUsd || 0) > 50000) score += 1;
+
+  return Math.max(0, Math.min(10, Math.round(score * 10) / 10));
+}
+
+function buildReport(address, dex, sec) {
+  if (!dex) {
+    return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet, or the address may be invalid.`;
+  }
+
+  const risk = scoreRisk(dex, sec);
+  const symbol = dex.baseToken?.symbol || "???";
+  const riskEmoji = risk === null ? "❓" : risk >= 7 ? "🟢" : risk >= 4 ? "🟡" : "🔴";
+
+  const lines = [
+    `🔍 *${dex.baseToken?.name || "Unknown"} ($${symbol})*`,
+    `Chain: ${dex.chainId} | Age: ${ageFromTimestamp(dex.pairCreatedAt)}`,
+    ``,
+    `💰 Price: $${dex.priceUsd || "N/A"} (${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h ?? "N/A"}% 24h)`,
+    `💧 Liquidity: ${fmtUsd(dex.liquidityUsd)}`,
+    `📊 24h Volume: ${fmtUsd(dex.volume24h)}`,
+    `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
+  ];
+
+  if (sec) {
+    lines.push(``, `*Security Checks:*`);
+    lines.push(`🍯 Honeypot: ${sec.isHoneypot === null ? "Unknown" : sec.isHoneypot ? "YES ⚠️" : "No ✅"}`);
+    if (sec.buyTax !== null) lines.push(`💸 Buy/Sell Tax: ${sec.buyTax}% / ${sec.sellTax}%`);
+    lines.push(`🏗 Ownership: ${sec.ownershipRenounced ? "Renounced ✅" : "Not renounced ⚠️"}`);
+    if (sec.isMintable !== null) lines.push(`🖨 Mintable: ${sec.isMintable ? "Yes ⚠️" : "No ✅"}`);
+    if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders: ${sec.top10HolderPct}%`);
+    if (sec.lpLocked !== null) lines.push(`🔒 LP Locked: ${sec.lpLocked ? "Yes ✅" : "No ⚠️"}`);
+  } else {
+    lines.push(``, `⚠️ Security data unavailable for this chain/token.`);
+  }
+
+  lines.push(``, `${riskEmoji} *Risk Score: ${risk ?? "N/A"}/10*`);
+  lines.push(``, `_Not financial advice. DYOR._`);
+
+  return lines.join("\n");
+}
+
+module.exports = { buildReport };
