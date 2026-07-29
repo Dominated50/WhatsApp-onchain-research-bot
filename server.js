@@ -4,7 +4,7 @@ const { detectAddressType } = require("./services/chains");
 const { getDexscreenerData } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { buildReport } = require("./services/report");
-const { sendText, markAsRead, sendChartButton, sendImage } = require("./services/whatsapp");
+const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist } = require("./services/watchlist");
 
 const app = express();
@@ -42,9 +42,24 @@ app.post("/webhook", async (req, res) => {
     const entry = req.body.entry?.[0];
     const change = entry?.changes?.[0];
     const message = change?.value?.messages?.[0];
-    if (!message || message.type !== "text") return;
+    if (!message) return;
 
-    const from = message.from; // sender's phone number
+    const from = message.from;
+
+    // Handle refresh button taps
+    if (message.type === "interactive" && message.interactive?.button_reply) {
+      const buttonId = message.interactive.button_reply.id;
+      if (buttonId.startsWith("refresh_")) {
+        const addr = buttonId.replace("refresh_", "");
+        reportCache.delete(addr.toLowerCase()); // force fresh data
+        const result = await getReport(addr);
+        await sendText(from, result.text);
+        await sendRefreshButton(from, addr);
+        return;
+      }
+    }
+
+    if (message.type !== "text") return;
     const text = message.text.body.trim();
 
     markAsRead(message.id);
@@ -80,6 +95,7 @@ app.post("/webhook", async (req, res) => {
         if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
         await sendText(from, result.text);
         if (result.chartUrl) await sendChartButton(from, result.chartUrl);
+        await sendRefreshButton(from, address);
       }
       return;
     }
