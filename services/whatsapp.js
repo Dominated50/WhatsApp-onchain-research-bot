@@ -72,4 +72,4 @@ async function markAsRead(messageId) {
 }
 
 
-module.exports = { sendText, markAsRead, sendChartButton };
+module.exports = { sendText, markAsRead, sendChartButton, sendImage };
