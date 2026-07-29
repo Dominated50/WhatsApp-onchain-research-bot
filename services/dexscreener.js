@@ -32,6 +32,7 @@ async function getDexscreenerData(contractAddress) {
       marketCap: bestPair.marketCap,
       pairCreatedAt: bestPair.pairCreatedAt,
       url: bestPair.url,
+      imageUrl: bestPair.info?.imageUrl || null,
     };
   } catch (err) {
     console.error("Dexscreener error:", err.message);
