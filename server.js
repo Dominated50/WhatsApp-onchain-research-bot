@@ -5,6 +5,7 @@ const { getDexscreenerData } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { buildReport } = require("./services/report");
 const { sendText, markAsRead } = require("./services/whatsapp");
+const { addToWatchlist, removeFromWatchlist, getWatchlist } = require("./services/watchlist");
 
 const app = express();
 app.use(express.json());
@@ -55,6 +56,34 @@ app.post("/webhook", async (req, res) => {
     }
     userLastRequest.set(from, Date.now());
 
+   const lowerText = text.toLowerCase().trim();
+
+    if (lowerText === "my watchlist" || lowerText === "watchlist") {
+      const list = await getWatchlist(from);
+      if (!list.length) {
+        return sendText(from, "Your watchlist is empty. Add one with:\n`watch <contract address>`");
+      }
+      await sendText(from, `📋 Checking your ${list.length} watched token(s)...`);
+      for (const addr of list) {
+        const report = await getReport(addr);
+        await sendText(from, report);
+      }
+      return;
+    }
+
+    if (lowerText.startsWith("watch ")) {
+      const addr = extractAddress(text);
+      if (!addr) return sendText(from, "⚠️ Couldn't find a valid address in that message.");
+      await addToWatchlist(from, addr);
+      return sendText(from, `✅ Added \`${addr}\` to your watchlist. Send *my watchlist* anytime to check them.`);
+    }
+
+    if (lowerText.startsWith("unwatch ")) {
+      const addr = extractAddress(text);
+      if (!addr) return sendText(from, "⚠️ Couldn't find a valid address in that message.");
+      await removeFromWatchlist(from, addr);
+      return sendText(from, `🗑️ Removed \`${addr}\` from your watchlist.`);
+    } 
     const address = extractAddress(text);
     if (!address) {
       return sendText(
