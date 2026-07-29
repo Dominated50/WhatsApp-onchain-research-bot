@@ -20,6 +20,7 @@ async function getDexscreenerData(contractAddress) {
 
     return {
       chainId: bestPair.chainId, // e.g. "ethereum", "bsc", "solana"
+      allDexes: [...new Set(data.pairs.map((p) => p.dexId))],
       dexId: bestPair.dexId,
       pairAddress: bestPair.pairAddress,
       baseToken: bestPair.baseToken, // { address, name, symbol }
