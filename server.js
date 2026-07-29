@@ -7,7 +7,7 @@ const { getCoingeckoListing } = require("./services/coingecko");
 const { getCmcListing } = require("./services/coinmarketcap");
 const { buildReport } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
-const { addToWatchlist, removeFromWatchlist, getWatchlist } = require("./services/watchlist");
+const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
 
 const app = express();
 app.use(express.json());
