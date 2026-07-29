@@ -112,8 +112,9 @@ app.post("/webhook", async (req, res) => {
     // Immediate ack so the user knows we're working (data pulls take a few seconds)
     await sendText(from, `🔎 Researching \`${address}\`... give me a few seconds.`);
 
-    const report = await getReport(address);
-    await sendText(from, report);
+   const result = await getReport(address);
+    await sendText(from, result.text);
+    if (result.chartUrl) await sendChartButton(from, result.chartUrl); 
   } catch (err) {
     console.error("Handler error:", err);
   }
