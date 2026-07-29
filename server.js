@@ -73,7 +73,21 @@ app.post("/webhook", async (req, res) => {
     }
     userLastRequest.set(from, Date.now());
 
-   const lowerText = text.toLowerCase().trim();
+    if (await isFirstTimeUser(from)) {
+      await sendText(
+        from,
+        `👋 *Welcome to ChainScope!*\n\n` +
+          `I do onchain research on any crypto token — just send me its *contract address (CA)* and I'll pull price, liquidity, security checks, and a risk score.\n\n` +
+          `Try it now:\n\`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
+          `Works for both EVM tokens (Ethereum, BSC, Base, etc.) and Solana.\n\n` +
+          `Other things I can do:\n` +
+          `👁️ *watch <address>* — save a token to check later\n` +
+          `📋 *my watchlist* — check all saved tokens at once\n` +
+          `❓ *menu* — see this list again anytime\n\n` +
+          `⚠️ Reports are for research only, not financial advice. Always DYOR.`
+      );
+    }
+    const lowerText = text.toLowerCase().trim();
     if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
       return sendText(
         from,
