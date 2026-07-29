@@ -26,6 +26,10 @@ async function getDexscreenerData(contractAddress) {
       baseToken: bestPair.baseToken, // { address, name, symbol }
       priceUsd: bestPair.priceUsd,
       priceChange24h: bestPair.priceChange?.h24,
+      priceChange6h: bestPair.priceChange?.h6,
+      priceChange1h: bestPair.priceChange?.h1,
+      volume6h: bestPair.volume?.h6,
+      volume1h: bestPair.volume?.h1,
       liquidityUsd: bestPair.liquidity?.usd,
       volume24h: bestPair.volume?.h24,
       fdv: bestPair.fdv,
