@@ -93,6 +93,7 @@ app.post("/webhook", async (req, res) => {
       }
       await sendText(from, `📋 Checking your ${list.length} watched token(s)...`);
       for (const addr of list) {
+        if (list.indexOf(addr) > 0) await new Promise((r) => setTimeout(r, 1500));
         const result = await getReport(addr);
         if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
         await sendText(from, result.text);
