@@ -43,4 +43,16 @@ async function getWatchlist(phone) {
   }
 }
 
-module.exports = { addToWatchlist, removeFromWatchlist, getWatchlist };
+async function isFirstTimeUser(phone) {
+  try {
+    const { data } = await client.get(`/get/seen:${phone}`);
+    if (data?.result) return false;
+    await client.get(`/set/seen:${phone}/1`);
+    return true;
+  } catch (err) {
+    console.error("First-time check error:", err.message);
+    return false; // fail safe: don't spam onboarding if Redis hiccups
+  }
+}
+
+module.exports = { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser };
