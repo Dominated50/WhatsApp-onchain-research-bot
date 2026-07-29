@@ -43,7 +43,7 @@ function scoreRisk(dex, sec) {
   return Math.max(0, Math.min(10, Math.round(score * 10) / 10));
 }
 
-function buildReport(address, dex, sec) {
+function buildReport(address, dex, sec, cg) {
   if (!dex) {
     return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet, or the address may be invalid.`;
   }
@@ -62,6 +62,7 @@ function buildReport(address, dex, sec) {
     `📈 Price Change: ${dex.priceChange1h > 0 ? "+" : ""}${dex.priceChange1h ?? "N/A"}% (1h) · ${dex.priceChange6h > 0 ? "+" : ""}${dex.priceChange6h ?? "N/A"}% (6h) · ${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h ?? "N/A"}% (24h)`,
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
     `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
+    `🦎 CoinGecko: ${cg?.listed ? `Listed ✅${cg.rank ? ` (Rank #${cg.rank})` : ""}` : "Not listed"}`,
   ];
 
   if (sec) {
