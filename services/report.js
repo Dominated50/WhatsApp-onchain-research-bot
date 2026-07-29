@@ -27,7 +27,7 @@ function scoreRisk(dex, sec) {
   if (sec.isOpenSource) score += 1;
   if (sec.isMintable) score -= 1;
   if (sec.canBlacklist) score -= 1;
-  if (sec.lpLocked) score += 1.5;
+  if (sec.lpLockedPct > 0) score += 1.5;
 
   const sellTax = parseFloat(sec.sellTax || 0);
   if (sellTax > 10) score -= 2;
@@ -69,7 +69,15 @@ function buildReport(address, dex, sec) {
     lines.push(`🏗 Ownership: ${sec.ownershipRenounced ? "Renounced ✅" : "Not renounced ⚠️"}`);
     if (sec.isMintable !== null) lines.push(`🖨 Mintable: ${sec.isMintable ? "Yes ⚠️" : "No ✅"}`);
     if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders: ${sec.top10HolderPct}%`);
-    if (sec.lpLocked !== null) lines.push(`🔒 LP Locked: ${sec.lpLocked ? "Yes ✅" : "No ⚠️"}`);
+    lines.push(
+      `🔒 LP Locked: ${
+        sec.lpLockedPct === null
+          ? "Unknown ❓"
+          : sec.lpLockedPct > 0
+          ? `${sec.lpLockedPct.toFixed(0)}% ✅`
+          : "No ⚠️"
+      }`
+    );
   } else {
     lines.push(``, `⚠️ Security data unavailable for this chain/token.`);
   }
