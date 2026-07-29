@@ -4,6 +4,7 @@ const { detectAddressType } = require("./services/chains");
 const { getDexscreenerData } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { getCoingeckoListing } = require("./services/coingecko");
+const { getCmcListing } = require("./services/coinmarketcap");
 const { buildReport } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist } = require("./services/watchlist");
@@ -150,8 +151,9 @@ async function getReport(address) {
   const dex = await getDexscreenerData(address);
   const sec = dex ? await getSecurityData(address, dex.chainId) : null;
   const cg = dex ? await getCoingeckoListing(address, dex.chainId) : null;
+  const cmc = dex ? await getCmcListing(address, dex.chainId) : null;
 
-  const report = buildReport(address, dex, sec, cg);
+  const report = buildReport(address, dex, sec, cg, cmc);
   const result = { text: report, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol || null };
 
   reportCache.set(address.toLowerCase(), {
