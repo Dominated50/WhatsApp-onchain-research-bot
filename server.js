@@ -57,6 +57,17 @@ app.post("/webhook", async (req, res) => {
     userLastRequest.set(from, Date.now());
 
    const lowerText = text.toLowerCase().trim();
+    if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
+      return sendText(
+        from,
+        `🤖 *ChainScope Commands*\n\n` +
+          `🔍 *Check a token*\nJust send a contract address, e.g.\n\`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
+          `👁️ *watch <address>*\nAdd a token to your watchlist\n\n` +
+          `🗑️ *unwatch <address>*\nRemove a token from your watchlist\n\n` +
+          `📋 *my watchlist*\nCheck all your watched tokens at once\n\n` +
+          `❓ *menu* or *help*\nShow this message again`
+      );
+    }
 
     if (lowerText === "my watchlist" || lowerText === "watchlist") {
       const list = await getWatchlist(from);
