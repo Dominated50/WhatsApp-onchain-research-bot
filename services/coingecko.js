@@ -1,3 +1,16 @@
+const axios = require("axios");
+
+const DEXSCREENER_TO_COINGECKO = {
+  ethereum: "ethereum",
+  bsc: "binance-smart-chain",
+  polygon: "polygon-pos",
+  arbitrum: "arbitrum-one",
+  optimism: "optimistic-ethereum",
+  base: "base",
+  avalanche: "avalanche",
+  fantom: "fantom",
+  solana: "solana",
+};
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -30,5 +43,6 @@ async function getCoingeckoListing(address, dexChainId, retrying = false) {
     }
     console.error("CoinGecko error:", err.message);
     return null;
+    module.exports = { getCoingeckoListing };
   }
 }
