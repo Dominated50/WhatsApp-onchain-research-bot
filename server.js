@@ -139,7 +139,7 @@ async function getReport(address) {
 
   return result;
 }
-}
+
 
 // --- Pull a contract address out of free-form text ---
 function extractAddress(text) {
