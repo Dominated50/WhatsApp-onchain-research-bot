@@ -69,6 +69,9 @@ function buildReport(address, dex, sec) {
     lines.push(`🏗 Ownership: ${sec.ownershipRenounced ? "Renounced ✅" : "Not renounced ⚠️"}`);
     if (sec.isMintable !== null) lines.push(`🖨 Mintable: ${sec.isMintable ? "Yes ⚠️" : "No ✅"}`);
     if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders: ${sec.top10HolderPct}%`);
+    if (sec.creatorPercent !== null) {
+      lines.push(`👤 Creator Holds: ${sec.creatorPercent}%${parseFloat(sec.creatorPercent) > 10 ? " ⚠️" : ""}`);
+    }
     lines.push(
       `🔒 LP Locked: ${
         sec.lpLockedPct === null
