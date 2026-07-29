@@ -48,8 +48,10 @@ function normalizeEvm(r) {
     top10HolderPct: r.holders
       ? sumTopHolders(r.holders, 10)
       : null,
-    lpLocked: r.lp_holders
-      ? r.lp_holders.some((h) => h.is_locked === 1)
+    lpLockedPct: r.lp_holders
+      ? r.lp_holders
+          .filter((h) => h.is_locked === 1)
+          .reduce((sum, h) => sum + parseFloat(h.percent || 0), 0) * 100
       : null,
     holderCount: r.holder_count ? parseInt(r.holder_count) : null,
   };
