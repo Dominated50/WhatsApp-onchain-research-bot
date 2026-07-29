@@ -1,19 +1,8 @@
-const axios = require("axios");
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-// Maps Dexscreener's chainId strings to CoinGecko's "platform" id format
-const DEXSCREENER_TO_COINGECKO = {
-  ethereum: "ethereum",
-  bsc: "binance-smart-chain",
-  polygon: "polygon-pos",
-  arbitrum: "arbitrum-one",
-  optimism: "optimistic-ethereum",
-  base: "base",
-  avalanche: "avalanche",
-  fantom: "fantom",
-  solana: "solana",
-};
-
-async function getCoingeckoListing(address, dexChainId) {
+async function getCoingeckoListing(address, dexChainId, retrying = false) {
   const platform = DEXSCREENER_TO_COINGECKO[dexChainId];
   if (!platform) return null;
 
@@ -35,9 +24,11 @@ async function getCoingeckoListing(address, dexChainId) {
     if (err.response?.status === 404) {
       return { listed: false };
     }
+    if (err.response?.status === 429 && !retrying) {
+      await sleep(2500); // back off briefly, then try once more
+      return getCoingeckoListing(address, dexChainId, true);
+    }
     console.error("CoinGecko error:", err.message);
     return null;
   }
 }
-
-module.exports = { getCoingeckoListing };
