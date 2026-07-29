@@ -43,6 +43,7 @@ async function getCoingeckoListing(address, dexChainId, retrying = false) {
     }
     console.error("CoinGecko error:", err.message);
     return null;
-    module.exports = { getCoingeckoListing };
+    
   }
 }
+module.exports = { getCoingeckoListing };
