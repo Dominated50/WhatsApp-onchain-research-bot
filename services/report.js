@@ -60,6 +60,7 @@ function buildReport(address, dex, sec) {
     `💧 Liquidity: ${fmtUsd(dex.liquidityUsd)}`,
     `📊 24h Volume: ${fmtUsd(dex.volume24h)}`,
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
+    `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
   ];
 
   if (sec) {
@@ -92,3 +93,4 @@ function buildReport(address, dex, sec) {
 }
 
 module.exports = { buildReport };
+
