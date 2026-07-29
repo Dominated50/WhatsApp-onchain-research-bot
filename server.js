@@ -4,7 +4,7 @@ const { detectAddressType } = require("./services/chains");
 const { getDexscreenerData } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { buildReport } = require("./services/report");
-const { sendText, markAsRead } = require("./services/whatsapp");
+const { sendText, markAsRead, sendChartButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist } = require("./services/watchlist");
 
 const app = express();
@@ -76,8 +76,9 @@ app.post("/webhook", async (req, res) => {
       }
       await sendText(from, `📋 Checking your ${list.length} watched token(s)...`);
       for (const addr of list) {
-        const report = await getReport(addr);
-        await sendText(from, report);
+        const result = await getReport(addr);
+      await sendText(from, result.text);
+    if (result.chartUrl) await sendChartButton(from, result.chartUrl);
       }
       return;
     }
@@ -129,13 +130,15 @@ async function getReport(address) {
   const sec = dex ? await getSecurityData(address, dex.chainId) : null;
 
   const report = buildReport(address, dex, sec);
+  const result = { text: report, chartUrl: dex?.url || null };
 
   reportCache.set(address.toLowerCase(), {
-    data: report,
+    data: result,
     expiresAt: Date.now() + CACHE_TTL_MS,
   });
 
-  return report;
+  return result;
+}
 }
 
 // --- Pull a contract address out of free-form text ---
