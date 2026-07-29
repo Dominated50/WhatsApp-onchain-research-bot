@@ -25,6 +25,28 @@ async function sendText(to, body) {
     console.error("WhatsApp send error:", err.response?.data || err.message);
   }
 }
+async function sendChartButton(to, chartUrl) {
+  try {
+    await client.post("/messages", {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "cta_url",
+        body: { text: "Tap below to view the live chart 👇" },
+        action: {
+          name: "cta_url",
+          parameters: {
+            display_text: "📈 View Live Chart",
+            url: chartUrl,
+          },
+        },
+      },
+    });
+  } catch (err) {
+    console.error("Chart button send error:", err.response?.data || err.message);
+  }
+}
 
 async function markAsRead(messageId) {
   try {
@@ -38,4 +60,5 @@ async function markAsRead(messageId) {
   }
 }
 
-module.exports = { sendText, markAsRead };
+
+module.exports = { sendText, markAsRead, sendChartButton };
