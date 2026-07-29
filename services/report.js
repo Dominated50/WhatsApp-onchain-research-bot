@@ -58,7 +58,8 @@ function buildReport(address, dex, sec) {
     ``,
     `💰 Price: $${dex.priceUsd || "N/A"} (${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h ?? "N/A"}% 24h)`,
     `💧 Liquidity: ${fmtUsd(dex.liquidityUsd)}`,
-    `📊 24h Volume: ${fmtUsd(dex.volume24h)}`,
+    `📊 Volume: ${fmtUsd(dex.volume1h)} (1h) · ${fmtUsd(dex.volume6h)} (6h) · ${fmtUsd(dex.volume24h)} (24h)`,
+    `📈 Price Change: ${dex.priceChange1h > 0 ? "+" : ""}${dex.priceChange1h ?? "N/A"}% (1h) · ${dex.priceChange6h > 0 ? "+" : ""}${dex.priceChange6h ?? "N/A"}% (6h) · ${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h ?? "N/A"}% (24h)`,
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
     `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
   ];
