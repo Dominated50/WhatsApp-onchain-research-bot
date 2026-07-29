@@ -47,7 +47,18 @@ async function sendChartButton(to, chartUrl) {
     console.error("Chart button send error:", err.response?.data || err.message);
   }
 }
-
+async function sendImage(to, imageUrl, caption) {
+  try {
+    await client.post("/messages", {
+      messaging_product: "whatsapp",
+      to,
+      type: "image",
+      image: { link: imageUrl, caption: caption || "" },
+    });
+  } catch (err) {
+    console.error("Image send error:", err.response?.data || err.message);
+  }
+}
 async function markAsRead(messageId) {
   try {
     await client.post("/messages", {
