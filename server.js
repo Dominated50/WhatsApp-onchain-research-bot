@@ -95,7 +95,7 @@ app.post("/webhook", async (req, res) => {
         if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
         await sendText(from, result.text);
         if (result.chartUrl) await sendChartButton(from, result.chartUrl);
-        await sendRefreshButton(from, address);
+        await sendRefreshButton(from, addr);
       }
       return;
     }
