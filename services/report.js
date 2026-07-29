@@ -62,8 +62,8 @@ function buildReport(address, dex, sec, cg, cmc) {
     `📈 Price Change: ${dex.priceChange1h > 0 ? "+" : ""}${dex.priceChange1h ?? "N/A"}% (1h) · ${dex.priceChange6h > 0 ? "+" : ""}${dex.priceChange6h ?? "N/A"}% (6h) · ${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h ?? "N/A"}% (24h)`,
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
     `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
-    `🦎 CoinGecko: ${cg?.listed ? `Listed ✅${cg.rank ? ` (Rank #${cg.rank})` : ""}` : "Not listed"}`,
-    `🟡 CoinMarketCap: ${cmc?.listed ? "Listed ✅" : "Not listed"}`,
+    `🦎 CoinGecko: ${cg === null ? "Unknown (check failed)" : cg.listed ? `Listed ✅${cg.rank ? ` (Rank #${cg.rank})` : ""}` : "Not listed"}`,
+    `🟡 CoinMarketCap: ${cmc === null ? "Unknown (check failed)" : cmc.listed ? "Listed ✅" : "Not listed"}`,
   ];
 
   if (sec) {
