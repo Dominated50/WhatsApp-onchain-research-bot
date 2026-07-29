@@ -47,6 +47,29 @@ async function sendChartButton(to, chartUrl) {
     console.error("Chart button send error:", err.response?.data || err.message);
   }
 }
+async function sendRefreshButton(to, address) {
+  try {
+    await client.post("/messages", {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: "Want the latest numbers?" },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: { id: `refresh_${address}`, title: "🔄 Refresh Price" },
+            },
+          ],
+        },
+      },
+    });
+  } catch (err) {
+    console.error("Refresh button send error:", err.response?.data || err.message);
+  }
+}
 async function sendImage(to, imageUrl, caption) {
   try {
     await client.post("/messages", {
@@ -72,4 +95,5 @@ async function markAsRead(messageId) {
 }
 
 
-module.exports = { sendText, markAsRead, sendChartButton, sendImage };
+
+module.exports = { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton };
