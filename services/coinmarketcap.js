@@ -27,11 +27,14 @@ async function getCmcListing(address, dexChainId) {
         headers: { "X-CMC_PRO_API_KEY": CMC_API_KEY },
         timeout: 8000,
       }
-    );
+      );
 
+      const entries = data?.data ? Object.values(data.data) : [];
+      const match = entries[0];
+      if (!match) return { listed: false };
 
-    return {
-      listed: true,
+      return {
+        listed: true,
       cmcId: match.id,
       slug: match.slug,
       url: `https://coinmarketcap.com/currencies/${match.slug}/`,
