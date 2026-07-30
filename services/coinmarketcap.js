@@ -29,6 +29,7 @@ async function getCmcListing(address, dexChainId) {
       }
     );
 
+    console.log("CMC raw response:", JSON.stringify(data).slice(0, 500));
     const entries = data?.data ? Object.values(data.data) : [];
     const match = entries[0];
     if (!match) return { listed: false };
