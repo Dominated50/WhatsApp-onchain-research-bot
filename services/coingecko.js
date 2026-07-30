@@ -22,7 +22,10 @@ async function getCoingeckoListing(address, dexChainId, retrying = false) {
   try {
     const { data } = await axios.get(
       `https://api.coingecko.com/api/v3/coins/${platform}/contract/${address.toLowerCase()}`,
-      { timeout: 8000 }
+      {
+        timeout: 8000,
+        headers: { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY },
+      }
     );
 
     if (!data?.id) return null;
