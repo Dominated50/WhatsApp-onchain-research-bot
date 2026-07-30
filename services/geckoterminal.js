@@ -59,3 +59,6 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
     console.error("GeckoTerminal error:", err.message);
     return null;
   }
+}
+
+module.exports = { getAthAtlFromPool };
