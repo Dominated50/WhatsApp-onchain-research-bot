@@ -1,6 +1,5 @@
 const axios = require("axios");
 
-// Maps Dexscreener's chainId strings to GeckoTerminal's network id format
 const DEXSCREENER_TO_GT = {
   ethereum: "eth",
   bsc: "bsc",
@@ -13,11 +12,23 @@ const DEXSCREENER_TO_GT = {
   solana: "solana",
 };
 
-/**
- * Calculates ATH/ATL from raw OHLCV candle history on GeckoTerminal.
- */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Checks Dexscreener for when the pool was actually created
+async function getPoolCreatedAt(pairAddress, dexChainId) {
+  try {
+    const { data } = await axios.get(
+      `https://api.dexscreener.com/latest/dex/pairs/${dexChainId}/${pairAddress}`,
+      { timeout: 10000 }
+    );
+    const pair = data?.pairs?.[0] || data?.pair;
+    return pair?.pairCreatedAt || null; // timestamp in ms
+  } catch (err) {
+    console.error("Dexscreener pool-created lookup error:", err.message);
+    return null;
+  }
 }
 
 async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retrying = false) {
@@ -26,7 +37,7 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
 
   try {
     const { data } = await axios.get(
-      `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${pairAddress}/ohlcv/day`,
+      `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${pairAddress}/ohlcv/month`,
       { params: { aggregate: 1, limit: 1000 }, timeout: 10000 }
     );
 
@@ -43,6 +54,12 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
 
     if (!athTime) return null;
 
+    // Check if we might be missing early trading data
+    const earliestCandleMs = candles[0][0] * 1000;
+    const poolCreatedAtMs = await getPoolCreatedAt(pairAddress, dexChainId);
+    const possiblyIncomplete =
+      poolCreatedAtMs && earliestCandleMs - poolCreatedAtMs > 24 * 60 * 60 * 1000; // more than 1 day gap
+
     return {
       athPrice,
       athPriceDate: athTime * 1000,
@@ -50,6 +67,7 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
       atlPriceDate: atlTime * 1000,
       athMarketCap: currentSupply ? athPrice * currentSupply : null,
       atlMarketCap: currentSupply ? atlPrice * currentSupply : null,
+      possiblyIncomplete,
     };
   } catch (err) {
     if (err.response?.status === 429 && !retrying) {
