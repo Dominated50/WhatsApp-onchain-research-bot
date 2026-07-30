@@ -29,9 +29,6 @@ async function getCmcListing(address, dexChainId) {
       }
     );
 
-    if (err.response?.status === 400 || err.response?.status === 404) {
-      return { listed: "uncertain" }; // address lookup failed oddly; can't confirm either way
-    }
 
     return {
       listed: true,
@@ -39,14 +36,14 @@ async function getCmcListing(address, dexChainId) {
       slug: match.slug,
       url: `https://coinmarketcap.com/currencies/${match.slug}/`,
     };
-  } catch (err) {
-    console.log("CMC error status:", err.response?.status, "data:", JSON.stringify(err.response?.data)?.slice(0, 300));
-    if (err.response?.status === 400 || err.response?.status === 404) {
-      return { listed: false };
+  
+    } catch (err) {
+      if (err.response?.status === 400 || err.response?.status === 404) {
+        return { listed: "uncertain" };
+      }
+      console.error("CoinMarketCap error:", err.message);
+      return null;
     }
-    console.error("CoinMarketCap error:", err.message);
-    return null;
-  }
 }
 
 module.exports = { getCmcListing };
