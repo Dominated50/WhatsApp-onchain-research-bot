@@ -41,6 +41,7 @@ async function getCmcListing(address, dexChainId) {
       url: `https://coinmarketcap.com/currencies/${match.slug}/`,
     };
   } catch (err) {
+    console.log("CMC error status:", err.response?.status, "data:", JSON.stringify(err.response?.data)?.slice(0, 300));
     if (err.response?.status === 400 || err.response?.status === 404) {
       return { listed: false };
     }
