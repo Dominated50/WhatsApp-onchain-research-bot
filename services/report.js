@@ -69,8 +69,6 @@ function buildReport(address, dex, sec, cg, cmc, athAtl) {
     ...(athAtl?.atlPrice ? [`📉 ATL Price: $${athAtl.atlPrice} (${new Date(athAtl.atlPriceDate).toLocaleDateString()})`] : []),
     ...(athAtl?.athMarketCap ? [`🚀 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
     ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
-    ...(cg?.listed && cg.ath ? [`🚀 ATH: $${cg.ath} (${new Date(cg.athDate).toLocaleDateString()})`] : []),
-    ...(cg?.listed && cg.atl ? [`📉 ATL: $${cg.atl} (${new Date(cg.atlDate).toLocaleDateString()})`] : []),
     `🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? `Unclear — check manually: https://coinmarketcap.com/search/?q=${encodeURIComponent(address)}` : cmc?.listed ? "Listed ✅" : cmc ? "Not listed" : "Unknown (check failed)"}`,
     ];
 
