@@ -73,13 +73,28 @@ function normalizeSolana(r) {
     holderCount: r.holder_count ? parseInt(r.holder_count) : null,
   };
 }
+const BURN_ADDRESSES = [
+  "0x000000000000000000000000000000000000dead",
+  "0x0000000000000000000000000000000000000000",
+  "0x0000000000000000000000000000000000dead",
+];
+
+function isRealHolder(h) {
+  const tag = (h.tag || "").toLowerCase();
+  const addr = (h.address || "").toLowerCase();
+  if (tag.includes("lp") || tag.includes("liquidity") || tag.includes("burn") || tag.includes("dead")) return false;
+  if (BURN_ADDRESSES.includes(addr)) return false;
+  return true;
+}
 
 function sumTopHolders(holders, n) {
   const top = holders
+    .filter(isRealHolder)
     .map((h) => parseFloat(h.percent || 0))
     .sort((a, b) => b - a)
     .slice(0, n);
   return (top.reduce((a, b) => a + b, 0) * 100).toFixed(1);
 }
+
 
 module.exports = { getSecurityData };
