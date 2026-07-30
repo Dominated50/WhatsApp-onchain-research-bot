@@ -43,6 +43,8 @@ function scoreRisk(dex, sec) {
   return Math.max(0, Math.min(10, Math.round(score * 10) / 10));
 }
 
+const { getHoldersUrl } = require("./chains");
+
 function buildReport(address, dex, sec, cg, cmc) {
   if (!dex) {
     return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet, or the address may be invalid.`;
@@ -72,7 +74,7 @@ function buildReport(address, dex, sec, cg, cmc) {
     if (sec.buyTax !== null) lines.push(`💸 Buy/Sell Tax: ${sec.buyTax}% / ${sec.sellTax}%`);
     lines.push(`🏗 Ownership: ${sec.ownershipRenounced ? "Renounced ✅" : "Not renounced ⚠️"}`);
     if (sec.isMintable !== null) lines.push(`🖨 Mintable: ${sec.isMintable ? "Yes ⚠️" : "No ✅"}`);
-    if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders: ${sec.top10HolderPct}%`);
+    if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders (excl. LP/burn): ${sec.top10HolderPct}%`);
     if (sec.creatorPercent !== null) {
       lines.push(`👤 Creator Holds: ${sec.creatorPercent}%${parseFloat(sec.creatorPercent) > 10 ? " ⚠️" : ""}`);
     }
@@ -89,6 +91,8 @@ function buildReport(address, dex, sec, cg, cmc) {
     lines.push(``, `⚠️ Security data unavailable for this chain/token.`);
   }
 
+  const holdersUrl = getHoldersUrl(dex.chainId, address);
+  if (holdersUrl) lines.push(``, `🔗 View all holders: ${holdersUrl}`);
   lines.push(``, `${riskEmoji} *Risk Score: ${risk ?? "N/A"}/10*`);
   lines.push(``, `_Not financial advice. DYOR._`);
 
