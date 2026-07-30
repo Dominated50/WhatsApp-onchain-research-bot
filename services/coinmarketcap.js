@@ -23,7 +23,7 @@ async function getCmcListing(address, dexChainId) {
     const { data } = await axios.get(
       "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info",
       {
-        params: { address, aux: "urls" },
+        params: { address: address.toLowerCase(), aux: "urls" },
         headers: { "X-CMC_PRO_API_KEY": CMC_API_KEY },
         timeout: 8000,
       }
