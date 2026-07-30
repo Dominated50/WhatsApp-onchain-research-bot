@@ -60,6 +60,19 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
     return null;
   }
 }
+const axios = require("axios");
+
+const DEXSCREENER_TO_GT = {
+  ethereum: "eth", bsc: "bsc", polygon: "polygon_pos",
+  arbitrum: "arbitrum", optimism: "optimism", base: "base",
+  avalanche: "avax", fantom: "ftm", solana: "solana",
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retrying = false) {
   const network = DEXSCREENER_TO_GT[dexChainId];
   if (!network || !pairAddress) return null;
 
@@ -73,13 +86,11 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
     if (!candles || !candles.length) return null;
 
     let athPrice = 0, athTime = null, atlPrice = Infinity, atlTime = null;
-
     for (const c of candles) {
       const [ts, , high, low] = c;
       if (high > athPrice) { athPrice = high; athTime = ts; }
       if (low < atlPrice) { atlPrice = low; atlTime = ts; }
     }
-
     if (!athTime) return null;
 
     return {
@@ -92,9 +103,14 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
       source: "geckoterminal-estimate",
     };
   } catch (err) {
+    if (err.response?.status === 429 && !retrying) {
+      await sleep(2500);
+      return getAthAtlFromPool(pairAddress, dexChainId, currentSupply, true);
+    }
     console.error("GeckoTerminal error:", err.message);
     return null;
   }
 }
 
+module.exports = { getAthAtlFromPool };
 module.exports = { getAthAtlFromPool };
