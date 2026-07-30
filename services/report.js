@@ -65,8 +65,7 @@ function buildReport(address, dex, sec, cg, cmc) {
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
     `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
     `🦎 CoinGecko: ${cg === null ? "Unknown (check failed)" : cg.listed ? `Listed ✅${cg.rank ? ` (Rank #${cg.rank})` : ""}` : "Not listed"}`,
-    `🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? "Unclear (check manually)" : cmc?.listed ? "Listed ✅" : cmc ? "Not listed" : "Unknown (check failed)"}`,
-  ];
+    `🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? `Unclear — check manually: https://coinmarketcap.com/search/?q=${encodeURIComponent(address)}` : cmc?.listed ? "Listed ✅" : cmc ? "Not listed" : "Unknown (check failed)"}`,
 
   if (sec) {
     lines.push(``, `*Security Checks:*`);
