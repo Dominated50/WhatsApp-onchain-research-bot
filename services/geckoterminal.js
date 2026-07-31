@@ -37,7 +37,7 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
 
   try {
     const { data } = await axios.get(
-      `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${pairAddress}/ohlcv/month`,
+      `https://api.geckoterminal.com/api/v2/networks/${network}/pools/${pairAddress}/ohlcv/day`,
       { params: { aggregate: 1, limit: 1000 }, timeout: 10000 }
     );
 
