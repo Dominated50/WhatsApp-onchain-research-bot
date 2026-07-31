@@ -171,7 +171,7 @@ async function getReport(address) {
   let athAtl = null;
 if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const estimatedSupply = dex.marketCap / parseFloat(dex.priceUsd);
-  athAtl = await getBestAthAtl(dex, estimatedSupply);
+  athAtl = await getBestAthAtl(dex, estimatedSupply, cg);
 }
   const report = buildReport(address, dex, sec, cg, cmc, athAtl);
   const result = { text: report, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol || null };
