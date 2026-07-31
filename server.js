@@ -168,7 +168,7 @@ async function getReport(address) {
   const dex = await getDexscreenerData(address);
   const sec = dex ? await getSecurityData(address, dex.chainId) : null;
   const cg = dex ? await getCoingeckoListing(address, dex.chainId) : null;
-  const cmc = dex ? await 
+  const cmc = dex ? await getCmcListing(address, dex.chainId) : null; 
 let athAtl = null;
 if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const estimatedSupply = dex.marketCap / parseFloat(dex.priceUsd);
