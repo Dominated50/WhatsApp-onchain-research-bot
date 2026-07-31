@@ -3,7 +3,20 @@ const { getAthAtlFromCoinStats } = require("./coinstats");
 const { getAthAtlFromPool } = require("./geckoterminal");
 const { getAthAtlFromMobula } = require("./mobula");
 
-async function getBestAthAtl(dex, currentSupply) {
+async function getBestAthAtl(dex, currentSupply, cg) {
+  // If the token is listed on CoinGecko, trust their number first —
+  // it tracks the token's full history, not just one trading pool.
+  if (cg?.listed && cg.ath) {
+    return {
+      athPrice: cg.ath,
+      athPriceDate: null,
+      atlPrice: cg.atl,
+      atlPriceDate: null,
+      athMarketCap: currentSupply ? cg.ath * currentSupply : null,
+      atlMarketCap: currentSupply && cg.atl ? cg.atl * currentSupply : null,
+    };
+  }
+
   const tokenAddress = dex.baseToken?.address;
   const results = [];
 
@@ -21,7 +34,6 @@ async function getBestAthAtl(dex, currentSupply) {
   const mb = await getAthAtlFromMobula(tokenAddress, dex.chainId, currentSupply);
   if (mb) results.push(mb);
 
-  console.log("ATH/ATL results from each source:", JSON.stringify(results));
   if (!results.length) return null;
 
   const athPrices = results.map(r => r.athPrice).filter(v => v != null && v > 0);
