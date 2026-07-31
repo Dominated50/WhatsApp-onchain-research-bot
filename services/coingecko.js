@@ -30,17 +30,19 @@ async function getCoingeckoListing(address, dexChainId, retrying = false) {
     );
 
     if (!data?.id) return null;
-
-    return {
-      listed: true,
-      coingeckoId: data.id,
-      rank: data.market_cap_rank || null,
-      url: `https://www.coingecko.com/en/coins/${data.id}`,
-      ath: data.market_data?.ath?.usd || null,
-      athDate: data.market_data?.ath_date?.usd || null,
-      atl: data.market_data?.atl?.usd || null,
-      atlDate: data.market_data?.atl_date?.usd || null,
-    };
+return {
+  listed: true,
+  coingeckoId: data.id,
+  rank: data.market_cap_rank || null,
+  url: `https://www.coingecko.com/en/coins/${data.id}`,
+  ath: data.market_data?.ath?.usd || null,
+  athDate: data.market_data?.ath_date?.usd || null,
+  atl: data.market_data?.atl?.usd || null,
+  atlDate: data.market_data?.atl_date?.usd || null,
+  totalSupply: data.market_data?.total_supply || null,
+  circulatingSupply: data.market_data?.circulating_supply || null,
+  maxSupply: data.market_data?.max_supply || null,
+};
   } catch (err) {
     if (err.response?.status === 404) {
       return { listed: false };
