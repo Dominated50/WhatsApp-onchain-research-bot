@@ -82,6 +82,7 @@ function buildReport(address, dex, sec, cg, cmc, athAtl) {
     lines.push(`🏗 Ownership: ${sec.ownershipRenounced ? "Renounced ✅" : "Not renounced ⚠️"}`);
     if (sec.isMintable !== null) lines.push(`🖨 Mintable: ${sec.isMintable ? "Yes ⚠️" : "No ✅"}`);
     if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders (excl. LP/burn): ${sec.top10HolderPct}%`);
+    if (sec.holderCount != null) lines.push(`👥 Total Holders: ${sec.holderCount.toLocaleString()}`);
     if (sec.creatorPercent !== null) {
       lines.push(`👤 Creator Holds: ${sec.creatorPercent}%${parseFloat(sec.creatorPercent) > 10 ? " ⚠️" : ""}`);
     }
