@@ -2,19 +2,21 @@ const { getAthAtlFromBirdeye } = require("./birdeye");
 const { getAthAtlFromCoinStats } = require("./coinstats");
 const { getAthAtlFromPool } = require("./geckoterminal");
 const { getAthAtlFromMobula } = require("./mobula");
+const { getHistoricalMarketCapRange } = require("./coingecko");
 
 async function getBestAthAtl(dex, currentSupply, cg) {
   // If the token is listed on CoinGecko, trust their number first —
   // it tracks the token's full history, not just one trading pool.
   if (cg?.listed && cg.ath) {
-    return {
-      athPrice: cg.ath,
-      athPriceDate: null,
-      atlPrice: cg.atl,
-      atlPriceDate: null,
-      athMarketCap: currentSupply ? cg.ath * currentSupply : null,
-      atlMarketCap: currentSupply && cg.atl ? cg.atl * currentSupply : null,
-    };
+  const capHistory = await getHistoricalMarketCapRange(cg.coingeckoId);
+  return {
+    athPrice: cg.ath,
+    athPriceDate: null,
+    atlPrice: cg.atl,
+    atlPriceDate: null,
+    athMarketCap: capHistory?.athMarketCap || null,
+    atlMarketCap: capHistory?.atlMarketCap || null,
+  };
   }
 
   const tokenAddress = dex.baseToken?.address;
