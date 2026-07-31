@@ -63,6 +63,8 @@ function buildReport(address, dex, sec, cg, cmc, athAtl) {
     `📊 Volume: ${fmtUsd(dex.volume1h)} (1h) · ${fmtUsd(dex.volume6h)} (6h) · ${fmtUsd(dex.volume24h)} (24h)`,
     `📈 Price Change: ${dex.priceChange1h > 0 ? "+" : ""}${dex.priceChange1h ?? "N/A"}% (1h) · ${dex.priceChange6h > 0 ? "+" : ""}${dex.priceChange6h ?? "N/A"}% (6h) · ${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h ?? "N/A"}% (24h)`,
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
+    `🔢 Circulating Supply: ${cg?.circulatingSupply ? Number(cg.circulatingSupply).toLocaleString() : (dex.marketCap && dex.priceUsd ? Number(dex.marketCap / parseFloat(dex.priceUsd)).toLocaleString() + " (est.)" : "N/A")}`,
+`🧮 Total Supply: ${cg?.totalSupply ? Number(cg.totalSupply).toLocaleString() : (dex.fdv && dex.priceUsd ? Number(dex.fdv / parseFloat(dex.priceUsd)).toLocaleString() + " (est.)" : "N/A")}`,
     `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
     `🦎 CoinGecko: ${cg === null ? "Unknown (check failed)" : cg.listed ? `Listed ✅${cg.rank ? ` (Rank #${cg.rank})` : ""}` : "Not listed"}`,
      ...(athAtl?.athPrice ? [`📈 ATH Price: $${athAtl.athPrice}`] : []),
