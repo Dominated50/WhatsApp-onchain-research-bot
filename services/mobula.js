@@ -45,7 +45,7 @@ async function getAthAtlFromMobula(tokenAddress, chainId, currentSupply) {
       atlMarketCap: currentSupply ? atlPrice * currentSupply : null,
     };
   } catch (err) {
-    console.error("Mobula error:", err.message);
+    console.error("Mobula error:", err.response?.data || err.message);
     return null;
   }
 }
