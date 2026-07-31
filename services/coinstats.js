@@ -1,9 +1,8 @@
 const axios = require("axios");
 
-// CoinStats' blockchain name format (confirmed via their official API docs)
 const CHAIN_TO_COINSTATS = {
   ethereum: "ethereum",
-  bsc: "binance-smart-chain",
+  bsc: "binance_smart",
   polygon: "polygon",
   arbitrum: "arbitrum",
   optimism: "optimism",
@@ -13,40 +12,8 @@ const CHAIN_TO_COINSTATS = {
   solana: "solana",
 };
 
-async function getAthAtlFromCoinStats(tokenAddress, chainId, currentSupply) {
-  if (!tokenAddress) return null;
-  const blockchain = CHAIN_TO_COINSTATS[chainId];
-
-  try {
-    // First attempt: filter by both address and blockchain (fastest, most precise)
-    let coin = await lookupCoin(tokenAddress, blockchain);
-
-    // Fallback: if nothing found, try without the blockchain filter
-    // (in case our chain-name mapping doesn't match CoinStats' internal naming)
-    if (!coin && blockchain) {
-      coin = await lookupCoin(tokenAddress, null);
-    }
-
-    if (!coin || (coin.allTimeHigh == null && coin.allTimeLow == null)) return null;
-
-    const athPrice = coin.allTimeHigh ?? null;
-    const atlPrice = coin.allTimeLow ?? null;
-
-    return {
-      athPrice,
-      athPriceDate: null, // CoinStats doesn't return the date, only the price
-      atlPrice,
-      atlPriceDate: null,
-      athMarketCap: currentSupply && athPrice ? athPrice * currentSupply : null,
-      atlMarketCap: currentSupply && atlPrice ? atlPrice * currentSupply : null,
-    };
-  } catch (err) {
-    console.error("CoinStats error:", err.message);
-    return null;
-  }
-}
-
-async function lookupCoin(tokenAddress, blockchain) {
+// Step 1: find the coin's internal CoinStats ID using its contract address
+async function findCoinId(tokenAddress, blockchain) {
   const params = { contractAddresses: tokenAddress };
   if (blockchain) params.blockchains = blockchain;
 
@@ -56,8 +23,56 @@ async function lookupCoin(tokenAddress, blockchain) {
     timeout: 10000,
   });
 
-  console.log("CoinStats raw result:", JSON.stringify(data?.result?.[0] || "NO MATCH FOUND"));
-return data?.result?.[0] || null;
+  return data?.result?.[0]?.id || null;
+}
+
+// Step 2: pull full price history for that coin and calculate ATH/ATL ourselves
+async function getChartAthAtl(coinId, currentSupply) {
+  const { data } = await axios.get(
+    `https://openapiv1.coinstats.app/coins/${coinId}/charts`,
+    {
+      params: { period: "all" },
+      headers: { "X-API-KEY": process.env.COINSTATS_API_KEY },
+      timeout: 10000,
+    }
+  );
+
+  if (!Array.isArray(data) || !data.length) return null;
+
+  let athPrice = 0, atlPrice = Infinity;
+
+  for (const point of data) {
+    const price = point[1]; // [timestamp, price, priceBtc, ...]
+    if (price > athPrice) athPrice = price;
+    if (price < atlPrice) atlPrice = price;
+  }
+
+  if (athPrice === 0) return null;
+
+  return {
+    athPrice,
+    athPriceDate: null,
+    atlPrice,
+    atlPriceDate: null,
+    athMarketCap: currentSupply ? athPrice * currentSupply : null,
+    atlMarketCap: currentSupply ? atlPrice * currentSupply : null,
+  };
+}
+
+async function getAthAtlFromCoinStats(tokenAddress, chainId, currentSupply) {
+  if (!tokenAddress) return null;
+  const blockchain = CHAIN_TO_COINSTATS[chainId];
+
+  try {
+    let coinId = await findCoinId(tokenAddress, blockchain);
+    if (!coinId) coinId = await findCoinId(tokenAddress, null); // fallback without chain filter
+    if (!coinId) return null;
+
+    return await getChartAthAtl(coinId, currentSupply);
+  } catch (err) {
+    console.error("CoinStats error:", err.message);
+    return null;
+  }
 }
 
 module.exports = { getAthAtlFromCoinStats };
