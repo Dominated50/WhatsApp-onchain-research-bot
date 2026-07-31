@@ -21,6 +21,7 @@ async function getBestAthAtl(dex, currentSupply) {
   const mb = await getAthAtlFromMobula(tokenAddress, dex.chainId, currentSupply);
   if (mb) results.push(mb);
 
+  console.log("ATH/ATL results from each source:", JSON.stringify(results));
   if (!results.length) return null;
 
   const athPrices = results.map(r => r.athPrice).filter(v => v != null && v > 0);
