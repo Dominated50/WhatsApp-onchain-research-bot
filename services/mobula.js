@@ -1,14 +1,14 @@
 const axios = require("axios");
 
 const CHAIN_TO_MOBULA = {
-  ethereum: "ethereum",
-  bsc: "bnb",
-  polygon: "polygon",
-  arbitrum: "arbitrum",
-  optimism: "optimism",
-  base: "base",
-  avalanche: "avalanche",
-  fantom: "fantom",
+  ethereum: "1",
+  bsc: "56",
+  polygon: "137",
+  arbitrum: "42161",
+  optimism: "10",
+  base: "8453",
+  avalanche: "43114",
+  fantom: "250",
   solana: "solana",
 };
 
