@@ -4,8 +4,7 @@ const { detectAddressType } = require("./services/chains");
 const { getDexscreenerData } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { getCoingeckoListing } = require("./services/coingecko");
-const { getAthAtlFromPool } = require("./services/geckoterminal");
-const { getAthAtlFromCoinStats } = require("./services/coinstats");
+const { getBestAthAtl } = require("./services/athAtl");
 const { getCmcListing } = require("./services/coinmarketcap");
 const { buildReport } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
@@ -169,22 +168,13 @@ async function getReport(address) {
   const sec = dex ? await getSecurityData(address, dex.chainId) : null;
   const cg = dex ? await getCoingeckoListing(address, dex.chainId) : null;
   const cmc = dex ? await getCmcListing(address, dex.chainId) : null; 
+  const report = buildReport(address, dex, sec, cg, cmc, athAtl);
+  const result = { text: report, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol || null };
 let athAtl = null;
 if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const estimatedSupply = dex.marketCap / parseFloat(dex.priceUsd);
-  const tokenAddress = dex.baseToken?.address || address;
-
-  // Try CoinStats first (more accurate, covers Solana + EVM)
-  athAtl = await getAthAtlFromCoinStats(tokenAddress, dex.chainId, estimatedSupply);
-
-  // Fall back to GeckoTerminal only if CoinStats has no data
-  if (!athAtl) {
-    athAtl = await getAthAtlFromPool(dex.pairAddress, dex.chainId, estimatedSupply);
-  }
+  athAtl = await getBestAthAtl(dex, estimatedSupply);
 }
-  const report = buildReport(address, dex, sec, cg, cmc, athAtl);
-  const result = { text: report, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol || null };
-
   reportCache.set(address.toLowerCase(), {
     data: result,
     expiresAt: Date.now() + CACHE_TTL_MS,
