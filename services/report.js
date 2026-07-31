@@ -65,10 +65,11 @@ function buildReport(address, dex, sec, cg, cmc, athAtl) {
     `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
     `🔀 Listed on: ${dex.allDexes?.join(", ") || "N/A"}`,
     `🦎 CoinGecko: ${cg === null ? "Unknown (check failed)" : cg.listed ? `Listed ✅${cg.rank ? ` (Rank #${cg.rank})` : ""}` : "Not listed"}`,
-    ...(athAtl?.athPrice ? [`🚀 ATH Price: $${athAtl.athPrice} (${new Date(athAtl.athPriceDate).toLocaleDateString()})`] : []),
-    ...(athAtl?.atlPrice ? [`📉 ATL Price: $${athAtl.atlPrice} (${new Date(athAtl.atlPriceDate).toLocaleDateString()})`] : []),
-    ...(athAtl?.athMarketCap ? [`🚀 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
-    ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
+     ...(athAtl?.athPrice ? [`📈 ATH Price: $${athAtl.athPrice}`] : []),
+     ...(athAtl?.atlPrice ? [`📉 ATL Price: $${athAtl.atlPrice}`] : []),
+     ...(athAtl?.athMarketCap ? [`📈 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
+     ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
+     ...(!athAtl ? [`📊 ATH/ATL: Not available for this token yet`] : []),
     `🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? `Unclear — check manually: https://coinmarketcap.com/search/?q=${encodeURIComponent(address)}` : cmc?.listed ? "Listed ✅" : cmc ? "Not listed" : "Unknown (check failed)"}`,
     ];
 
