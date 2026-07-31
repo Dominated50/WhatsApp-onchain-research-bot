@@ -74,7 +74,7 @@ async function getAthAtlFromPool(pairAddress, dexChainId, currentSupply, retryin
       await sleep(2500);
       return getAthAtlFromPool(pairAddress, dexChainId, currentSupply, true);
     }
-    console.error("GeckoTerminal error:", err.message);
+    console.error("GeckoTerminal error:", err.response?.data || err.message);
     return null;
   }
 }
