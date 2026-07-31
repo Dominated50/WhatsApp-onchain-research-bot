@@ -1,56 +1,57 @@
-const axios = require("axios");
+const { getAthAtlFromBirdeye } = require("./birdeye");
+const { getAthAtlFromCoinStats } = require("./coinstats");
+const { getAthAtlFromPool } = require("./geckoterminal");
+const { getAthAtlFromMobula } = require("./mobula");
 
-const DEXSCREENER_TO_COINGECKO = {
-  ethereum: "ethereum",
-  bsc: "binance-smart-chain",
-  polygon: "polygon-pos",
-  arbitrum: "arbitrum-one",
-  optimism: "optimistic-ethereum",
-  base: "base",
-  avalanche: "avalanche",
-  fantom: "fantom",
-  solana: "solana",
-};
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function getCoingeckoListing(address, dexChainId, retrying = false) {
-  const platform = DEXSCREENER_TO_COINGECKO[dexChainId];
-  if (!platform) return null;
-
-  try {
-    const { data } = await axios.get(
-      `https://api.coingecko.com/api/v3/coins/${platform}/contract/${address.toLowerCase()}`,
-      {
-        timeout: 8000,
-        headers: { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY },
-      }
-    );
-
-    if (!data?.id) return null;
-
+async function getBestAthAtl(dex, currentSupply, cg) {
+  // If the token is listed on CoinGecko, trust their number first —
+  // it tracks the token's full history, not just one trading pool.
+  if (cg?.listed && cg.ath) {
     return {
-      listed: true,
-      coingeckoId: data.id,
-      rank: data.market_cap_rank || null,
-      url: `https://www.coingecko.com/en/coins/${data.id}`,
-      ath: data.market_data?.ath?.usd || null,
-      athDate: data.market_data?.ath_date?.usd || null,
-      atl: data.market_data?.atl?.usd || null,
-      atlDate: data.market_data?.atl_date?.usd || null,
+      athPrice: cg.ath,
+      athPriceDate: cg.athDate,
+      atlPrice: cg.atl,
+      atlPriceDate: cg.atlDate,
+      athMarketCap: currentSupply ? cg.ath * currentSupply : null,
+      atlMarketCap: currentSupply && cg.atl ? cg.atl * currentSupply : null,
     };
-  } catch (err) {
-    if (err.response?.status === 404) {
-      return { listed: false };
-    }
-    if (err.response?.status === 429 && !retrying) {
-      await sleep(2500); // back off briefly, then try once more
-      return getCoingeckoListing(address, dexChainId, true);
-    }
-    console.error("CoinGecko error:", err.message);
-    return null;
-    
   }
+
+  const tokenAddress = dex.baseToken?.address;
+  const results = [];
+
+  if (dex.chainId === "solana") {
+    const b = await getAthAtlFromBirdeye(tokenAddress, dex.chainId, currentSupply);
+    if (b) results.push(b);
+  }
+
+  const cs = await getAthAtlFromCoinStats(tokenAddress, dex.chainId, currentSupply);
+  if (cs) results.push(cs);
+
+  const gt = await getAthAtlFromPool(dex.pairAddress, dex.chainId, currentSupply);
+  if (gt) results.push(gt);
+
+  const mb = await getAthAtlFromMobula(tokenAddress, dex.chainId, currentSupply);
+  if (mb) results.push(mb);
+
+  if (!results.length) return null;
+
+  const athPrices = results.map(r => r.athPrice).filter(v => v != null && v > 0);
+  const atlPrices = results.map(r => r.atlPrice).filter(v => v != null && v > 0);
+
+  if (!athPrices.length && !atlPrices.length) return null;
+
+  const athPrice = athPrices.length ? Math.max(...athPrices) : null;
+  const atlPrice = atlPrices.length ? Math.min(...atlPrices) : null;
+
+  return {
+    athPrice,
+    atlPrice,
+    athPriceDate: null,
+    atlPriceDate: null,
+    athMarketCap: currentSupply && athPrice ? athPrice * currentSupply : null,
+    atlMarketCap: currentSupply && atlPrice ? atlPrice * currentSupply : null,
+  };
 }
-module.exports = { getCoingeckoListing };
+
+module.exports = { getBestAthAtl };
