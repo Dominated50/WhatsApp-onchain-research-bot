@@ -53,5 +53,35 @@ async function getCoingeckoListing(address, dexChainId, retrying = false) {
     return null;
   }
 }
+async function getHistoricalMarketCapRange(coingeckoId, retrying = false) {
+  try {
+    const { data } = await axios.get(
+      `https://api.coingecko.com/api/v3/coins/${coingeckoId}/market_chart`,
+      {
+        params: { vs_currency: "usd", days: 365 },
+        timeout: 8000,
+        headers: { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY },
+      }
+    );
 
-module.exports = { getCoingeckoListing };
+    const caps = data?.market_caps;
+    if (!caps || !caps.length) return null;
+
+    let athMarketCap = 0, atlMarketCap = Infinity;
+    for (const [, cap] of caps) {
+      if (cap > athMarketCap) athMarketCap = cap;
+      if (cap < atlMarketCap) atlMarketCap = cap;
+    }
+
+    if (athMarketCap === 0) return null;
+    return { athMarketCap, atlMarketCap };
+  } catch (err) {
+    if (err.response?.status === 429 && !retrying) {
+      await sleep(2500);
+      return getHistoricalMarketCapRange(coingeckoId, true);
+    }
+    console.error("CoinGecko market cap history error:", err.message);
+    return null;
+  }
+}
+module.exports = { getCoingeckoListing, getHistoricalMarketCapRange };
