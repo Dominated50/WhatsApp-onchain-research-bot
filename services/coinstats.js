@@ -56,7 +56,8 @@ async function lookupCoin(tokenAddress, blockchain) {
     timeout: 10000,
   });
 
-  return data?.result?.[0] || null;
+  console.log("CoinStats raw result:", JSON.stringify(data?.result?.[0] || "NO MATCH FOUND"));
+return data?.result?.[0] || null;
 }
 
 module.exports = { getAthAtlFromCoinStats };
