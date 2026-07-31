@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const CHAIN_TO_MOBULA = {
   ethereum: "ethereum",
-  bsc: "bnb smart chain",
+  bsc: "bnb",
   polygon: "polygon",
   arbitrum: "arbitrum",
   optimism: "optimism",
