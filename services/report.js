@@ -101,7 +101,10 @@ function buildReport(address, dex, sec, cg, cmc, athAtl, wallets) {
 
   const holdersUrl = getHoldersUrl(dex.chainId, address);
   if (holdersUrl) lines.push(``, `🔗 View all holders: ${holdersUrl}`);
-  if (wallets?.snipers?.length) {
+  if (wallets?.unsupported) {
+  lines.push(``, `🔍 Sniper/Cluster Check: Ethereum only for now — not yet available for this chain`);
+}
+if (wallets?.snipers?.length) {
   lines.push(``, `🎯 *Sniper Alert:* ${wallets.snipers.length} top holder(s) bought within 10 min of launch`);
 }
 if (wallets?.clusters?.length) {
