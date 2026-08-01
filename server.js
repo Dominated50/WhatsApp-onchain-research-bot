@@ -136,7 +136,7 @@ app.post("/webhook", async (req, res) => {
   await sendRefreshButton(from, addr);
 }
 return; 
-
+    }
     if (lowerText.startsWith("watch ")) {
       const addr = extractAddress(text);
       if (!addr) return sendText(from, "⚠️ Couldn't find a valid address in that message.");
@@ -166,7 +166,8 @@ return;
     // Immediate ack so the user knows we're working (data pulls take a few seconds)
     await sendText(from, `🔎 Researching \`${address}\`... give me a few seconds.`);
 
-   const result = await getReport(address);
+
+      const result = await getReport(address);
 userLastAddress.set(from, address);
 if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
 await sendText(from, result.summary);
