@@ -56,6 +56,7 @@ function normalizeEvm(r) {
           .reduce((sum, h) => sum + parseFloat(h.percent || 0), 0) * 100
       : null,
     holderCount: r.holder_count ? parseInt(r.holder_count) : null,
+    holders: r.holders || null,
   };
 }
 
