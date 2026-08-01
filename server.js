@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const { detectAddressType } = require("./services/chains");
-const { getDexscreenerData } = require("./services/dexscreener");
+const { getDexscreenerData, searchByName } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { getCoingeckoListing } = require("./services/coingecko");
 const { getBestAthAtl } = require("./services/athAtl");
@@ -25,6 +25,7 @@ const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 
 const userLastRequest = new Map(); // phone -> timestamp
 const userLastAddress = new Map(); // phone -> last researched contract address
+const pendingSearches = new Map(); // phone -> array of search results awaiting a number reply
 const MIN_INTERVAL_MS = 5 * 1000; // 5s between requests per user
 
 // --- 1. Webhook verification (Meta calls this once when you set up the webhook) ---
@@ -122,6 +123,40 @@ app.post("/webhook", async (req, res) => {
   await sendRefreshButton(from, addr);
   return;
     }
+    if (lowerText.startsWith("research ")) {
+  const query = text.slice(9).trim();
+  if (!query) return sendText(from, "Tell me a token name to search, e.g. `research pepe`");
+
+  const results = await searchByName(query);
+  if (!results.length) {
+    return sendText(from, `No tokens found matching "${query}". Try the exact contract address instead for guaranteed accuracy.`);
+  }
+
+  pendingSearches.set(from, results);
+
+  let msg = `🔎 Found ${results.length} match(es) for "${query}":\n\n`;
+  results.forEach((r, i) => {
+    msg += `${i + 1}. *${r.name} (${r.symbol})* — ${r.chainId}\n   Liquidity: $${r.liquidityUsd.toLocaleString()}\n   \`${r.address}\`\n\n`;
+  });
+  msg += `⚠️ *Names can be faked by scammers.* Verify the contract address matches the official one before trusting any result.\n\nReply with a number (1-${results.length}) to research that token.`;
+
+  return sendText(from, msg);
+}
+
+if (/^[1-5]$/.test(lowerText) && pendingSearches.has(from)) {
+  const results = pendingSearches.get(from);
+  const choice = results[parseInt(lowerText) - 1];
+  if (!choice) return sendText(from, "Invalid number — please reply with a valid option from the list.");
+  pendingSearches.delete(from);
+  const address = choice.address;
+  await sendText(from, `🔬 Researching \`${address}\`... give me a few seconds.`);
+  const result = await getReport(address);
+  userLastAddress.set(from, address);
+  if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
+  await sendText(from, result.summary);
+  await sendMoreButton(from, address);
+  return;
+}
 
     if (lowerText === "my watchlist" || lowerText === "watchlist") {
       const list = await getWatchlist(from);
