@@ -10,7 +10,7 @@ const { analyzeWallets } = require("./services/walletAnalysis");
 const { detectWashTrading } = require("./services/washTrading");
 const { detectDumpsIntoPumps } = require("./services/dumpDetection");
 const { buildReport, buildSummary } = require("./services/report");
-const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
+const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
 
 const app = express();
