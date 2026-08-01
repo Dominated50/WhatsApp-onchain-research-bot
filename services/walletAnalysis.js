@@ -59,12 +59,14 @@ async function analyzeWallets(holders, chainId, pairCreatedAt) {
 
   // Only check top 10 holders to keep this fast and within rate limits
   const topHolders = holders.slice(0, 10);
+  console.log("Checking top holders:", topHolders.map(h => h.address));
   const snipers = [];
   const funderMap = {}; // fundedBy address -> [holder addresses]
 
   for (const h of topHolders) {
     if (!h.address) continue;
     const info = await getFirstIncomingTx(h.address, chain);
+    console.log(`First-tx result for ${h.address}:`, JSON.stringify(info));
     await sleep(250); // stay safely under Etherscan's rate limit
 
     if (!info) continue;
