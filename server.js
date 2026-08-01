@@ -90,17 +90,26 @@ app.post("/webhook", async (req, res) => {
 
     if (await isFirstTimeUser(from)) {
       await sendText(
-        from,
-        `👋 *Welcome to ChainScope!*\n\n` +
-          `I do onchain research on any crypto token — just send me its *contract address (CA)* and I'll pull price, liquidity, security checks, and a risk score.\n\n` +
-          `Try it now:\n\`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
-          `Works for both EVM tokens (Ethereum, BSC, Base, etc.) and Solana.\n\n` +
-          `Other things I can do:\n` +
-          `👁️ *watch <address>* — save a token to check later\n` +
-          `📋 *my watchlist* — check all saved tokens at once\n` +
-          `❓ *menu* — see this list again anytime\n\n` +
-          `⚠️ Reports are for research only, not financial advice. Always DYOR.`
-      );
+  from,
+  `👋 *Welcome to ChainScope!*\n\n` +
+    `I'm your onchain research assistant. Here's exactly how to use me:\n\n` +
+    `*1️⃣ Paste a contract address*\n` +
+    `Send me any token's contract address and I'll check its price, safety, and more.\n` +
+    `Example: \`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
+    `*2️⃣ Or search by name*\n` +
+    `Don't have the address? Type \`research\` followed by the name.\n` +
+    `Example: \`research pepe\`\n` +
+    `I'll show you the matching tokens — reply with the number of the one you want.\n\n` +
+    `*3️⃣ Get more detail anytime*\n` +
+    `Every result starts with a quick summary. Tap *"📋 Full Report"* (or just type \`more\`) to see the complete breakdown — security checks, ATH/ATL, wallet analysis, and more.\n\n` +
+    `*Other commands:*\n` +
+    `👁️ \`watch <address>\` — save a token to check later\n` +
+    `🗑️ \`unwatch <address>\` — remove a saved token\n` +
+    `📋 \`my watchlist\` — check all saved tokens at once\n` +
+    `❓ \`menu\` — see this list again anytime\n\n` +
+    `Works on Ethereum, BSC, Base, and other EVM chains, plus Solana.\n\n` +
+    `⚠️ *Important:* Token names can be faked by scammers. Always double-check the contract address before trusting a result. Reports are for research only — not financial advice. Always DYOR.`
+);
     }
     const lowerText = text.toLowerCase().trim();
     if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
