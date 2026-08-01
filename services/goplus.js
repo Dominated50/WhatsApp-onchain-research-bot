@@ -69,6 +69,7 @@ function normalizeSolana(r) {
     isMintable: r.mintable?.status === "1",
     canBlacklist: r.freezable?.status === "1",
     top10HolderPct: r.holders ? sumTopHolders(r.holders, 10) : null,
+    holders: r.holders || null,
     lpLocked: null,
     holderCount: r.holder_count ? parseInt(r.holder_count) : null,
   };
