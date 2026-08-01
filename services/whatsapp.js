@@ -70,6 +70,29 @@ async function sendRefreshButton(to, address) {
     console.error("Refresh button send error:", err.response?.data || err.message);
   }
 }
+async function sendMoreButton(to, address) {
+  try {
+    await client.post("/messages", {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: "Want the full breakdown?" },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: { id: `more_${address}`, title: "📋 Full Report" },
+            },
+          ],
+        },
+      },
+    });
+  } catch (err) {
+    console.error("More button send error:", err.response?.data || err.message);
+  }
+}
 async function sendImage(to, imageUrl, caption) {
   try {
     await client.post("/messages", {
@@ -96,4 +119,4 @@ async function markAsRead(messageId) {
 
 
 
-module.exports = { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton };
+module.exports = { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton };
