@@ -45,7 +45,7 @@ function scoreRisk(dex, sec) {
 
 const { getHoldersUrl } = require("./chains");
 
-function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading) {
+function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps) {
   if (!dex) {
     return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet, or the address may be invalid.`;
   }
@@ -133,6 +133,13 @@ if (washTrading?.suspects?.length) {
     lines.push(`     🔗 https://etherscan.io/address/${s.address}`);
   }
 }
+  if (dumps?.dumps?.length) {
+  lines.push(``, `📉 *Dump Alert:* ${dumps.dumps.length} large sell(s) detected during price pumps`);
+  for (const d of dumps.dumps) {
+    lines.push(`   • \`${d.address}\` sold during a +${d.pumpPercent}% pump`);
+    lines.push(`     🔗 https://etherscan.io/address/${d.address}`);
+  }
+  }
   lines.push(``, `${riskEmoji} *Risk Score: ${risk ?? "N/A"}/10*`);
   lines.push(``, `_Not financial advice. DYOR._`);
 
