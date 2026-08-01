@@ -1,34 +1,23 @@
 const axios = require("axios");
 
-const CHAIN_TO_ETHERSCAN_ID = {
-  ethereum: 1,
-  bsc: 56,
-  polygon: 137,
-  arbitrum: 42161,
-  optimism: 10,
-  base: 8453,
-  avalanche: 43114,
-  fantom: 250,
-};
+const ETHEREUM_CHAIN_ID = 1;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Finds a wallet's very first incoming transaction — tells us when it
-// became active, and who funded it.
-async function getFirstIncomingTx(address, chainId) {
+async function getFirstIncomingTx(address) {
   try {
     const { data } = await axios.get("https://api.etherscan.io/v2/api", {
       params: {
-        chainid: chainId,
+        chainid: ETHEREUM_CHAIN_ID,
         module: "account",
         action: "txlist",
         address,
         startblock: 0,
         endblock: 99999999,
         page: 1,
-        offset: 20, // check first 20 txs to reliably find the first *incoming* one
+        offset: 20,
         sort: "asc",
         apikey: process.env.ETHERSCAN_API_KEY,
       },
@@ -36,10 +25,7 @@ async function getFirstIncomingTx(address, chainId) {
     });
 
     const txs = data?.result;
-if (!Array.isArray(txs) || !txs.length) {
-  console.log(`Etherscan raw response for ${address}:`, JSON.stringify(data));
-  return null;
-}
+    if (!Array.isArray(txs) || !txs.length) return null;
 
     const firstIncoming = txs.find(
       (tx) => tx.to?.toLowerCase() === address.toLowerCase()
@@ -57,29 +43,29 @@ if (!Array.isArray(txs) || !txs.length) {
 }
 
 async function analyzeWallets(holders, chainId, pairCreatedAt) {
-  const chain = CHAIN_TO_ETHERSCAN_ID[chainId];
-  if (!chain || !holders || !holders.length) return null;
+  // Only Ethereum mainnet is supported for now — other chains need
+  // separate free-tier integrations (BSCTrace, Routescan, etc.)
+  if (chainId !== "ethereum") {
+    return { unsupported: true };
+  }
 
-  // Only check top 10 holders to keep this fast and within rate limits
+  if (!holders || !holders.length) return null;
+
   const topHolders = holders.slice(0, 10);
-  console.log("Checking top holders:", topHolders.map(h => h.address));
   const snipers = [];
-  const funderMap = {}; // fundedBy address -> [holder addresses]
+  const funderMap = {};
 
   for (const h of topHolders) {
     if (!h.address) continue;
-    const info = await getFirstIncomingTx(h.address, chain);
-    console.log(`First-tx result for ${h.address}:`, JSON.stringify(info));
-    await sleep(250); // stay safely under Etherscan's rate limit
+    const info = await getFirstIncomingTx(h.address);
+    await sleep(250);
 
     if (!info) continue;
 
-    // Sniper check: did they receive tokens within 10 minutes of pool creation?
     if (pairCreatedAt && info.timestamp - pairCreatedAt < 10 * 60 * 1000 && info.timestamp - pairCreatedAt >= 0) {
       snipers.push({ address: h.address, percent: h.percent });
     }
 
-    // Clustering check: group holders funded by the same wallet
     if (info.fundedBy) {
       if (!funderMap[info.fundedBy]) funderMap[info.fundedBy] = [];
       funderMap[info.fundedBy].push(h.address);
