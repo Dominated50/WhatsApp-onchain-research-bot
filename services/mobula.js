@@ -18,10 +18,10 @@ async function getAthAtlFromMobula(tokenAddress, chainId, currentSupply) {
 
   try {
     const { data } = await axios.get("https://api.mobula.io/api/1/market/history", {
-      params: { asset: tokenAddress, blockchain },
-      headers: { Authorization: process.env.MOBULA_API_KEY },
-      timeout: 10000,
-    });
+  params: { asset: tokenAddress, blockchain, period: "1d" },
+  headers: { Authorization: process.env.MOBULA_API_KEY },
+  timeout: 10000,
+});
 
     const history = data?.data?.price_history;
     if (!history || !history.length) return null;
