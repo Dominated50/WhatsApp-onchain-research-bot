@@ -54,24 +54,25 @@ app.post("/webhook", async (req, res) => {
     const from = message.from;
 
     // Handle refresh button taps
-    if (message.type === "interactive" && message.interactive?.button_reply) {
-      const buttonId = message.interactive.button_reply.id;
-      if (buttonId.startsWith("refresh_")) {
-        const addr = buttonId.replace("refresh_", "");
-        reportCache.delete(addr.toLowerCase()); // force fresh data
-        const result = await getReport(addr);
-        await sendText(from, result.text);
-        await sendRefreshButton(from, addr);
-        return;
-        if (buttonId.startsWith("more_")) {
-  const addr = buttonId.replace("more_", "");
-  const result = await getReport(addr);
-  await sendText(from, result.text);
-  if (result.chartUrl) await sendChartButton(from, result.chartUrl);
-  await sendRefreshButton(from, addr);
-  return;
-        }
-      }
+  if (message.type === "interactive" && message.interactive?.button_reply) {
+  const buttonId = message.interactive.button_reply.id;
+  if (buttonId.startsWith("refresh_")) {
+    const addr = buttonId.replace("refresh_", "");
+    reportCache.delete(addr.toLowerCase());
+    const result = await getReport(addr);
+    await sendText(from, result.text);
+    await sendRefreshButton(from, addr);
+    return;
+  }
+  if (buttonId.startsWith("more_")) {
+    const addr = buttonId.replace("more_", "");
+    const result = await getReport(addr);
+    await sendText(from, result.text);
+    if (result.chartUrl) await sendChartButton(from, result.chartUrl);
+    await sendRefreshButton(from, addr);
+    return;
+  }
+  }
     
 
     if (message.type !== "text") return;
