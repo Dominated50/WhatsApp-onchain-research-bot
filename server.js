@@ -127,16 +127,15 @@ app.post("/webhook", async (req, res) => {
         return sendText(from, "Your watchlist is empty. Add one with:\n`watch <contract address>`");
       }
       await sendText(from, `📋 Checking your ${list.length} watched token(s)...`);
-      for (const addr of list) {
-        if (list.indexOf(addr) > 0) await new Promise((r) => setTimeout(r, 1500));
-        const result = await getReport(address);
-userLastAddress.set(from, address);
-if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
-await sendText(from, result.summary);
-await sendMoreButton(from, address);
-      }
-      return;
-    }
+     for (const addr of list) {
+  if (list.indexOf(addr) > 0) await new Promise((r) => setTimeout(r, 1500));
+  const result = await getReport(addr);
+  if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
+  await sendText(from, result.text);
+  if (result.chartUrl) await sendChartButton(from, result.chartUrl);
+  await sendRefreshButton(from, addr);
+}
+return; 
 
     if (lowerText.startsWith("watch ")) {
       const addr = extractAddress(text);
@@ -168,10 +167,10 @@ await sendMoreButton(from, address);
     await sendText(from, `🔎 Researching \`${address}\`... give me a few seconds.`);
 
    const result = await getReport(address);
-    if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
-    await sendText(from, result.text);
-    if (result.chartUrl) await sendChartButton(from, result.chartUrl);
-    await sendRefreshButton(from, address);
+userLastAddress.set(from, address);
+if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
+await sendText(from, result.summary);
+await sendMoreButton(from, address);
   } catch (err) {
       console.error("Handler error:", err);
   }
