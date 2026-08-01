@@ -7,6 +7,7 @@ const { getCoingeckoListing } = require("./services/coingecko");
 const { getBestAthAtl } = require("./services/athAtl");
 const { getCmcListing } = require("./services/coinmarketcap");
 const { analyzeWallets } = require("./services/walletAnalysis");
+const { detectWashTrading } = require("./services/washTrading");
 const { buildReport } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
@@ -173,13 +174,16 @@ async function getReport(address) {
 const wallets = sec?.holders && dex?.chainId && dex?.pairCreatedAt
   ? await analyzeWallets(sec.holders, dex.chainId, dex.pairCreatedAt)
   : null;
+  const washTrading = dex?.chainId && dex?.pairAddress
+  ? await detectWashTrading(dex.baseToken?.address, dex.chainId, dex.pairAddress)
+  : null;
 console.log("Wallet analysis result:", JSON.stringify(wallets));
   let athAtl = null;
 if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const estimatedSupply = dex.marketCap / parseFloat(dex.priceUsd);
   athAtl = await getBestAthAtl(dex, estimatedSupply, cg);
 }
-  const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets);
+  const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading);
   const result = { text: report, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol || null };
 
   reportCache.set(address.toLowerCase(), {
