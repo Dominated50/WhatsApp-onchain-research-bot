@@ -62,6 +62,14 @@ app.post("/webhook", async (req, res) => {
         await sendText(from, result.text);
         await sendRefreshButton(from, addr);
         return;
+        if (buttonId.startsWith("more_")) {
+  const addr = buttonId.replace("more_", "");
+  const result = await getReport(addr);
+  await sendText(from, result.text);
+  if (result.chartUrl) await sendChartButton(from, result.chartUrl);
+  await sendRefreshButton(from, addr);
+  return;
+        }
       }
     }
 
@@ -103,6 +111,15 @@ app.post("/webhook", async (req, res) => {
           `❓ *menu* or *help*\nShow this message again`
       );
     }
+    if (lowerText === "more") {
+  const addr = userLastAddress.get(from);
+  if (!addr) return sendText(from, "I don't have a recent token to expand on — send me a contract address first.");
+  const result = await getReport(addr);
+  await sendText(from, result.text);
+  if (result.chartUrl) await sendChartButton(from, result.chartUrl);
+  await sendRefreshButton(from, addr);
+  return;
+    }
 
     if (lowerText === "my watchlist" || lowerText === "watchlist") {
       const list = await getWatchlist(from);
@@ -112,11 +129,11 @@ app.post("/webhook", async (req, res) => {
       await sendText(from, `📋 Checking your ${list.length} watched token(s)...`);
       for (const addr of list) {
         if (list.indexOf(addr) > 0) await new Promise((r) => setTimeout(r, 1500));
-        const result = await getReport(addr);
-        if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
-        await sendText(from, result.text);
-        if (result.chartUrl) await sendChartButton(from, result.chartUrl);
-        await sendRefreshButton(from, addr);
+        const result = await getReport(address);
+userLastAddress.set(from, address);
+if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
+await sendText(from, result.summary);
+await sendMoreButton(from, address);
       }
       return;
     }
