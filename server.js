@@ -188,7 +188,8 @@ if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   athAtl = await getBestAthAtl(dex, estimatedSupply, cg);
 }
   const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps);
-  const result = { text: report, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol || null };
+const summary = buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps);
+const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol };
 
   reportCache.set(address.toLowerCase(), {
     data: result,
