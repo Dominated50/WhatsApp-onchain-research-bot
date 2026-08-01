@@ -43,5 +43,41 @@ async function getDexscreenerData(contractAddress) {
     return null;
   }
 }
+async function searchByName(query) {
+  try {
+    const { data } = await axios.get(
+      `https://api.dexscreener.com/latest/dex/search`,
+      { params: { q: query }, timeout: 8000 }
+    );
 
-module.exports = { getDexscreenerData };
+    if (!data?.pairs?.length) return [];
+
+    // Sort by liquidity, highest first, and take the top 5 distinct tokens
+    const sorted = data.pairs
+      .filter((p) => p.liquidity?.usd)
+      .sort((a, b) => (b.liquidity.usd || 0) - (a.liquidity.usd || 0));
+
+    const seen = new Set();
+    const results = [];
+    for (const p of sorted) {
+      const addr = p.baseToken?.address?.toLowerCase();
+      if (!addr || seen.has(addr)) continue;
+      seen.add(addr);
+      results.push({
+        name: p.baseToken?.name || "Unknown",
+        symbol: p.baseToken?.symbol || "???",
+        address: p.baseToken?.address,
+        chainId: p.chainId,
+        liquidityUsd: p.liquidity?.usd || 0,
+      });
+      if (results.length >= 5) break;
+    }
+
+    return results;
+  } catch (err) {
+    console.error("Dexscreener search error:", err.message);
+    return [];
+  }
+}
+
+module.exports = { getDexscreenerData, searchByName };
