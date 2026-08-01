@@ -45,7 +45,7 @@ function scoreRisk(dex, sec) {
 
 const { getHoldersUrl } = require("./chains");
 
-function buildReport(address, dex, sec, cg, cmc, athAtl, wallets) {
+function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading) {
   if (!dex) {
     return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet, or the address may be invalid.`;
   }
@@ -111,6 +111,9 @@ if (wallets?.clusters?.length) {
   const totalClustered = wallets.clusters.reduce((sum, c) => sum + c.addresses.length, 0);
   lines.push(`🕸️ *Wallet Clustering:* ${totalClustered} holder wallets appear linked to ${wallets.clusters.length} funding source(s) — possible same owner`);
 }
+  if (washTrading?.suspects?.length) {
+  lines.push(`🔁 *Wash Trading Alert:* ${washTrading.suspects.length} wallet(s) repeatedly buying/selling — possible fake volume`);
+  }
   lines.push(``, `${riskEmoji} *Risk Score: ${risk ?? "N/A"}/10*`);
   lines.push(``, `_Not financial advice. DYOR._`);
 
