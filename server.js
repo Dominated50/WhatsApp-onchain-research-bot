@@ -169,9 +169,11 @@ async function getReport(address) {
   const sec = dex ? await getSecurityData(address, dex.chainId) : null;
   const cg = dex ? await getCoingeckoListing(address, dex.chainId) : null;
   const cmc = dex ? await getCmcListing(address, dex.chainId) : null; 
-  const wallets = sec?.holders && dex?.chainId && dex?.pairCreatedAt
+  console.log("Wallet check — holders:", sec?.holders?.length, "chainId:", dex?.chainId, "pairCreatedAt:", dex?.pairCreatedAt);
+const wallets = sec?.holders && dex?.chainId && dex?.pairCreatedAt
   ? await analyzeWallets(sec.holders, dex.chainId, dex.pairCreatedAt)
   : null;
+console.log("Wallet analysis result:", JSON.stringify(wallets));
   let athAtl = null;
 if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const estimatedSupply = dex.marketCap / parseFloat(dex.priceUsd);
