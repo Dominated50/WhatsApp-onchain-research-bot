@@ -36,7 +36,10 @@ async function getFirstIncomingTx(address, chainId) {
     });
 
     const txs = data?.result;
-    if (!Array.isArray(txs) || !txs.length) return null;
+if (!Array.isArray(txs) || !txs.length) {
+  console.log(`Etherscan raw response for ${address}:`, JSON.stringify(data));
+  return null;
+}
 
     const firstIncoming = txs.find(
       (tx) => tx.to?.toLowerCase() === address.toLowerCase()
