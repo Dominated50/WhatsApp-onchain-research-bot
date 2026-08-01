@@ -215,7 +215,7 @@ return;
 
       const result = await getReport(address);
 userLastAddress.set(from, address);
-if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.symbol || "Token"} logo`);
+if (result.imageUrl) await sendImage(from, result.imageUrl, `${result.name || result.symbol || "Token"}`);
 await sendText(from, result.summary);
 await sendMoreButton(from, address);
   } catch (err) {
@@ -252,7 +252,7 @@ if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
 }
   const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps);
 const summary = buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps);
-const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol };
+const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol, name: dex?.baseToken?.name };
 
   reportCache.set(address.toLowerCase(), {
     data: result,
