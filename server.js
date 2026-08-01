@@ -9,7 +9,7 @@ const { getCmcListing } = require("./services/coinmarketcap");
 const { analyzeWallets } = require("./services/walletAnalysis");
 const { detectWashTrading } = require("./services/washTrading");
 const { detectDumpsIntoPumps } = require("./services/dumpDetection");
-const { buildReport } = require("./services/report");
+const { buildReport, buildSummary } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
 
