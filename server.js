@@ -24,6 +24,7 @@ const reportCache = new Map(); // address -> { data, expiresAt }
 const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 
 const userLastRequest = new Map(); // phone -> timestamp
+const userLastAddress = new Map(); // phone -> last researched contract address
 const MIN_INTERVAL_MS = 5 * 1000; // 5s between requests per user
 
 // --- 1. Webhook verification (Meta calls this once when you set up the webhook) ---
@@ -71,7 +72,7 @@ app.post("/webhook", async (req, res) => {
   return;
         }
       }
-    }
+    
 
     if (message.type !== "text") return;
     const text = message.text.body.trim();
