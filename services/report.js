@@ -145,6 +145,46 @@ if (washTrading?.suspects?.length) {
 
   return lines.join("\n");
 }
+function buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps) {
+  if (!dex) {
+    return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet.`;
+  }
 
-module.exports = { buildReport };
+  const risk = scoreRisk(dex, sec);
+  const symbol = dex.baseToken?.symbol || "???";
+  const riskEmoji = risk === null ? "❓" : risk >= 7 ? "🟢" : risk >= 4 ? "🟡" : "🔴";
+  const verdict = risk === null ? "Unknown" : risk >= 7 ? "Looks safe" : risk >= 4 ? "Proceed with caution" : "High risk";
+
+  const honeypotLine = sec?.isHoneypot === null
+    ? "❓ Honeypot status unknown"
+    : sec?.isHoneypot
+      ? "🚨 *HONEYPOT DETECTED*"
+      : "✅ Not a honeypot";
+
+  const flagCount = (wallets?.snipers?.length || 0) +
+    (wallets?.clusters?.length || 0) +
+    (washTrading?.suspects?.length || 0) +
+    (dumps?.dumps?.length || 0);
+
+  const lines = [
+    `🔍 *${dex.baseToken?.name || "Unknown"} (${symbol})*`,
+    `Chain: ${dex.chainId} | Age: ${ageFromTimestamp(dex.pairCreatedAt)}`,
+    ``,
+    `💰 Price: $${dex.priceUsd || "N/A"} (${dex.priceChange24h > 0 ? "+" : ""}${dex.priceChange24h}% 24h)`,
+    `🏦 Market Cap: ${fmtUsd(dex.marketCap)}`,
+    `💧 Liquidity: ${fmtUsd(dex.liquidityUsd)}`,
+    honeypotLine,
+    `${riskEmoji} Risk Score: ${risk ?? "N/A"}/10 — ${verdict}`,
+  ];
+
+  if (flagCount > 0) {
+    lines.push(``, `🚨 *${flagCount} wallet red flag(s) detected* — see full report`);
+  }
+
+  lines.push(``, `_Reply "more" for the full report._`);
+
+  return lines.join("\n");
+}
+
+module.exports = { buildReport, buildSummary };
 
