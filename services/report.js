@@ -101,19 +101,38 @@ function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading) {
 
   const holdersUrl = getHoldersUrl(dex.chainId, address);
   if (holdersUrl) lines.push(``, `🔗 View all holders: ${holdersUrl}`);
-  if (wallets?.unsupported) {
+if (wallets?.unsupported) {
   lines.push(``, `🔍 Sniper/Cluster Check: Ethereum only for now — not yet available for this chain`);
 }
+
 if (wallets?.snipers?.length) {
   lines.push(``, `🎯 *Sniper Alert:* ${wallets.snipers.length} top holder(s) bought within 10 min of launch`);
+  for (const s of wallets.snipers) {
+    lines.push(`   • \`${s.address}\` (${parseFloat(s.percent).toFixed(2)}% held)`);
+    lines.push(`     🔗 https://etherscan.io/address/${s.address}`);
+  }
 }
+
 if (wallets?.clusters?.length) {
   const totalClustered = wallets.clusters.reduce((sum, c) => sum + c.addresses.length, 0);
-  lines.push(`🕸️ *Wallet Clustering:* ${totalClustered} holder wallets appear linked to ${wallets.clusters.length} funding source(s) — possible same owner`);
+  lines.push(``, `🕸️ *Wallet Clustering:* ${totalClustered} holder wallets appear linked to ${wallets.clusters.length} funding source(s) — possible same owner`);
+  wallets.clusters.forEach((c) => {
+    lines.push(`   • Funded by \`${c.funder}\`:`);
+    lines.push(`     🔗 https://etherscan.io/address/${c.funder}`);
+    c.addresses.forEach(addr => {
+      lines.push(`      - \`${addr}\``);
+      lines.push(`        🔗 https://etherscan.io/address/${addr}`);
+    });
+  });
 }
-  if (washTrading?.suspects?.length) {
-  lines.push(`🔁 *Wash Trading Alert:* ${washTrading.suspects.length} wallet(s) repeatedly buying/selling — possible fake volume`);
+
+if (washTrading?.suspects?.length) {
+  lines.push(``, `🔁 *Wash Trading Alert:* ${washTrading.suspects.length} wallet(s) repeatedly buying/selling — possible fake volume`);
+  for (const s of washTrading.suspects) {
+    lines.push(`   • \`${s.address}\` (${s.buys} buys, ${s.sells} sells)`);
+    lines.push(`     🔗 https://etherscan.io/address/${s.address}`);
   }
+}
   lines.push(``, `${riskEmoji} *Risk Score: ${risk ?? "N/A"}/10*`);
   lines.push(``, `_Not financial advice. DYOR._`);
 
