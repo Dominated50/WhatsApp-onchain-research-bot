@@ -129,36 +129,50 @@ app.post("/webhook", async (req, res) => {
     if (await isFirstTimeUser(from)) {
       await sendText(
   from,
-  `👋 *Welcome to ChainScope.*\n\n` +
-    `I'm your onchain research assistant — send me a token, and I'll check its price, security, and history before you ever have to open a browser tab.\n\n` +
-    `*Try it now.* Send me a contract address:\n` +
-    `\`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
-    `Don't have the address? Just type \`research\` followed by a name, like \`research pepe\`.\n\n` +
-    `Type \`menu\` anytime to see everything I can do — comparisons, wallet audits, watchlists, and more.\n\n` +
-    `⚠️ Reports are for research only, not financial advice.
+  [
+    "👋 *Welcome to ChainScope.*",
+    "",
+    "I'm your onchain research assistant — send me a token, and I'll check its price, security, and history before you ever have to open a browser tab.",
+    "",
+    "*Try it now.* Send me a contract address:",
+    "`0x2170ed0880ac9a755fd29b2688956bd959f933f`",
+    "",
+    "Don't have the address? Just type `research` followed by a name, like `research pepe`.",
+    "",
+    "Type `menu` anytime to see everything I can do — comparisons, wallet audits, watchlists, and more.",
+    "",
+    "⚠️ Reports are for research only, not financial advice. Always DYOR.",
+  ].join("\n")
 );
     }
-    const lowerText = text.toLowerCase().trim();
-    if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
+    const lowerText = text.
+      if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
   return sendText(
     from,
-    `📋 *ChainScope — Full Command List*\n\n` +
-      `*RESEARCH*\n` +
-      `🔍 Send any contract address to research it\n` +
-      `🔎 \`research <name>\` — search by name, e.g. \`research pepe\`\n` +
-      `🔎 \`research <name> on <chain>\` — narrow to one chain, e.g. \`research pepe on ethereum\`\n` +
-      `📋 \`more\` — get the full detailed report after any result\n\n` +
-      `*COMPARE & AUDIT*\n` +
-      `⚖️ \`compare <address1> <address2>\` — see two tokens side by side\n` +
-      `👜 \`audit <wallet address> <chain>\` — check every token a wallet holds for red flags\n\n` +
-      `*WATCHLIST*\n` +
-      `👁️ \`watch <address>\` — save a token to track\n` +
-      `🗑️ \`unwatch <address>\` — remove a saved token\n` +
-      `📋 \`my watchlist\` — see everything you're tracking\n` +
-      `☀️ You'll automatically get a free daily digest each morning for your watchlist — price, movement, and any new red flags\n\n` +
-      `*SUPPORTED CHAINS*\n` +
-      `Ethereum, BSC, Base, Polygon, Arbitrum, Optimism, Avalanche, Fantom, and Solana\n\n` +
-      `⚠️ Token names can be faked by scammers — always verify the contract address. Reports are for research only, not financial advice. 
+    [
+      "📋 *ChainScope — Full Command List*",
+      "",
+      "*RESEARCH*",
+      "🔍 Send any contract address to research it",
+      "🔎 `research <name>` — search by name, e.g. `research pepe`",
+      "🔎 `research <name> on <chain>` — narrow to one chain, e.g. `research pepe on ethereum`",
+      "📋 `more` — get the full detailed report after any result",
+      "",
+      "*COMPARE & AUDIT*",
+      "⚖️ `compare <address1> <address2>` — see two tokens side by side",
+      "👜 `audit <wallet address> <chain>` — check every token a wallet holds for red flags",
+      "",
+      "*WATCHLIST*",
+      "👁️ `watch <address>` — save a token to track",
+      "🗑️ `unwatch <address>` — remove a saved token",
+      "📋 `my watchlist` — see everything you're tracking",
+      "☀️ You'll automatically get a free daily digest each morning for your watchlist — price, movement, and any new red flags",
+      "",
+      "*SUPPORTED CHAINS*",
+      "Ethereum, BSC, Base, Polygon, Arbitrum, Optimism, Avalanche, Fantom, and Solana",
+      "",
+      "⚠️ Token names can be faked by scammers — always verify the contract address. Reports are for research only, not financial advice. Always DYOR.",
+    ].join("\n")
   );
     }
     if (lowerText === "more") {
