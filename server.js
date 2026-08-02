@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const { detectAddressType } = require("./services/chains");
-const { getDexscreenerData, searchByName } = require("./services/dexscreener");
+const { getDexscreenerData, searchByName, searchByNameOnChain } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
 const { getCoingeckoListing, getLiveHolderCount } = require("./services/coingecko");
 const { getBestAthAtl } = require("./services/athAtl");
@@ -12,6 +12,33 @@ const { detectDumpsIntoPumps } = require("./services/dumpDetection");
 const { buildReport, buildSummary } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
+const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
+
+const CHAIN_ALIASES = {
+  eth: "ethereum", ethereum: "ethereum",
+  bsc: "bsc", binance: "bsc", bnb: "bsc",
+  polygon: "polygon", matic: "polygon",
+  arbitrum: "arbitrum", arb: "arbitrum",
+  optimism: "optimism", op: "optimism",
+  base: "base",
+  avalanche: "avalanche", avax: "avalanche",
+  fantom: "fantom", ftm: "fantom",
+  solana: "solana", sol: "solana",
+};
+
+function extractChainFromQuery(text) {
+  const words = text.toLowerCase().split(/\s+/);
+  const lastWord = words[words.length - 1];
+  if (CHAIN_ALIASES[lastWord]) {
+    return {
+      chainId: CHAIN_ALIASES[lastWord],
+      nameOnly: words.slice(0, -1).join(" ").replace(/\bon\b\s*$/, "").trim(),
+    };
+  }
+  return null;
+}
+
+const app = express();
 
 const app = express();
 app.use(express.json());
@@ -131,12 +158,17 @@ app.post("/webhook", async (req, res) => {
   if (result.chartUrl) await sendChartButton(from, result.chartUrl);
   await sendRefreshButton(from, addr);
   return;
-    }
-    if (lowerText.startsWith("research ")) {
-  const query = text.slice(9).trim();
-  if (!query) return sendText(from, "Tell me a token name to search, e.g. `research pepe`");
+    }if (lowerText.startsWith("research ")) {
+  const rawQuery = text.slice(9).trim();
+  if (!rawQuery) return sendText(from, "Tell me a token name to search, e.g. `research pepe` or `research pepe on ethereum`");
 
-  const results = await searchByName(query);
+  const chainMatch = extractChainFromQuery(rawQuery);
+  const query = chainMatch ? chainMatch.nameOnly : rawQuery;
+  if (!query) return sendText(from, "Please include a token name, e.g. `research pepe on ethereum`");
+
+  const results = chainMatch
+    ? await searchByNameOnChain(query, chainMatch.chainId)
+    : await searchByName(query);
   if (!results.length) {
     return sendText(from, `No tokens found matching "${query}". Try the exact contract address instead for guaranteed accuracy.`);
   }
