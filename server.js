@@ -3,7 +3,7 @@ const express = require("express");
 const { detectAddressType } = require("./services/chains");
 const { getDexscreenerData, searchByName } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
-const { getCoingeckoListing } = require("./services/coingecko");
+const { getCoingeckoListing, getLiveHolderCount } = require("./services/coingecko");
 const { getBestAthAtl } = require("./services/athAtl");
 const { getCmcListing } = require("./services/coinmarketcap");
 const { analyzeWallets } = require("./services/walletAnalysis");
@@ -233,6 +233,7 @@ async function getReport(address) {
   const dex = await getDexscreenerData(address);
   const sec = dex ? await getSecurityData(address, dex.chainId) : null;
   const cg = dex ? await getCoingeckoListing(address, dex.chainId) : null;
+  const liveHolderCount = dex ? await getLiveHolderCount(dex.baseToken?.address || address, dex.chainId) : null;
   const cmc = dex ? await getCmcListing(address, dex.chainId) : null; 
   console.log("Wallet check — holders:", sec?.holders?.length, "chainId:", dex?.chainId, "pairCreatedAt:", dex?.pairCreatedAt);
 const wallets = sec?.holders && dex?.chainId && dex?.pairCreatedAt
@@ -250,7 +251,7 @@ if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const estimatedSupply = dex.marketCap / parseFloat(dex.priceUsd);
   athAtl = await getBestAthAtl(dex, estimatedSupply, cg);
 }
-  const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps);
+  const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps, liveHolderCount);
 const summary = buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps);
 const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol, name: dex?.baseToken?.name };
 
