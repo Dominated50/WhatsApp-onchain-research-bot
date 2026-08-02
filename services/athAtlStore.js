@@ -30,34 +30,29 @@ async function updateStoredAthAtl(address, fresh) {
   try {
     const existing = await getStoredAthAtl(address);
 
-    const merged = {
-      athPrice: existing?.athPrice != null && fresh.athPrice != null
-        ? Math.max(existing.athPrice, fresh.athPrice)
-        : (existing?.athPrice ?? fresh.athPrice ?? null),
-      atlPrice: existing?.atlPrice != null && fresh.atlPrice != null
-        ? Math.min(existing.atlPrice, fresh.atlPrice)
-        : (existing?.atlPrice ?? fresh.atlPrice ?? null),
+    const athImproved = fresh.athPrice != null && (!existing || existing.athPrice == null || fresh.athPrice > existing.athPrice);
+    const atlImproved = fresh.atlPrice != null && (!existing || existing.atlPrice == null || fresh.atlPrice < existing.atlPrice);
+
+    // Only trust market cap figures that came attached to whichever price actually wins.
+    // Never synthesize a market cap ourselves — that's how the trillion-dollar bug happened.
+    const result = {
+      athPrice: athImproved ? fresh.athPrice : (existing?.athPrice ?? fresh.athPrice ?? null),
+      athMarketCap: athImproved ? (fresh.athMarketCap ?? null) : (existing?.athMarketCap ?? null),
+      atlPrice: atlImproved ? fresh.atlPrice : (existing?.atlPrice ?? fresh.atlPrice ?? null),
+      atlMarketCap: atlImproved ? (fresh.atlMarketCap ?? null) : (existing?.atlMarketCap ?? null),
     };
 
-    // Only write back to Redis if something actually improved
-    const improved =
-      (fresh.athPrice != null && (!existing || fresh.athPrice > (existing.athPrice ?? 0))) ||
-      (fresh.atlPrice != null && (!existing || fresh.atlPrice < (existing.atlPrice ?? Infinity)));
-
-    if (improved) {
-      await client.post(`/set/${keyFor(address)}`, JSON.stringify(merged));
+    if (athImproved || atlImproved) {
+      await client.post(`/set/${keyFor(address)}`, JSON.stringify(result));
     }
 
     return {
       ...fresh,
-      athPrice: merged.athPrice,
-      atlPrice: merged.atlPrice,
-      athMarketCap: fresh.currentSupply && merged.athPrice ? merged.athPrice * fresh.currentSupply : fresh.athMarketCap,
-      atlMarketCap: fresh.currentSupply && merged.atlPrice ? merged.atlPrice * fresh.currentSupply : fresh.atlMarketCap,
+      ...result,
     };
   } catch (err) {
     console.error("ATH/ATL store update error:", err.message);
-    return fresh; // fail safe: just use today's fresh result if Redis hiccups
+    return fresh;
   }
 }
 
