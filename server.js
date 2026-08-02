@@ -145,8 +145,8 @@ app.post("/webhook", async (req, res) => {
   ].join("\n")
 );
     }
-    const lowerText = text.
-      if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
+    const lowerText = text.toLowerCase().trim();
+if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
   return sendText(
     from,
     [
