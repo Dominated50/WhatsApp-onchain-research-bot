@@ -35,19 +35,23 @@ async function getWalletHoldings(walletAddress, chainId) {
 async function auditWallet(walletAddress, chainId) {
   const holdings = await getWalletHoldings(walletAddress, chainId);
   if (!holdings || !holdings.length) return null;
-
-  const withValue = holdings
+const allMapped = holdings
+    .filter((h) => h.contractAddress)
     .map((h) => ({
       symbol: h.symbol,
       name: h.name,
       address: h.contractAddress,
       valueUsd: (h.amount || 0) * (h.price || 0),
-    }))
-    .filter((h) => h.address && h.valueUsd >= 1) // skip dust under $1
-    .sort((a, b) => b.valueUsd - a.valueUsd)
-    .slice(0, 10); // cap at top 10 holdings to limit API calls
+    }));
 
-  if (!withValue.length) return { holdings: [], skipped: holdings.length };
+  const withValue = allMapped
+    .filter((h) => h.valueUsd >= 1)
+    .sort((a, b) => b.valueUsd - a.valueUsd)
+    .slice(0, 10); // cap real holdings checked at top 10 to limit API calls
+
+  const dustTokens = allMapped.filter((h) => h.valueUsd < 1);
+
+  if (!withValue.length) return { holdings: [], dustTokens, skipped: 0 };
 
   const checked = [];
   for (const h of withValue) {
@@ -56,7 +60,7 @@ async function auditWallet(walletAddress, chainId) {
     await new Promise((r) => setTimeout(r, 300));
   }
 
-  return { holdings: checked, skipped: holdings.length - withValue.length };
+  return { holdings: checked, dustTokens, skipped: 0 };
 }
 
 module.exports = { getWalletHoldings, auditWallet };
