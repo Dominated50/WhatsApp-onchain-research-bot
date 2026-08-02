@@ -15,7 +15,8 @@ const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = r
 const { buildCompareReport } = require("./services/compare");
 const { auditWallet } = require("./services/walletAudit");
 const { buildWalletAuditReport } = require("./services/walletAuditReport");
-
+const { getFlagSet, getStoredFlags, storeFlags, findNewFlags } = require("./services/digest");
+const { getAllWatchlistUsers } = require("./services/watchlist");
 
 const CHAIN_ALIASES = {
   eth: "ethereum", ethereum: "ethereum",
@@ -71,6 +72,13 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
+app.get("/daily-digest", async (req, res) => {
+  if (req.query.key !== process.env.DIGEST_SECRET) {
+    return res.status(403).send("Forbidden");
+  }
+  res.status(200).send("Digest started");
+  runDailyDigest().catch((err) => console.error("Digest run failed:", err));
+});
 // --- 2. Incoming messages ---
 app.post("/webhook", async (req, res) => {
   // Always ack immediately — Meta expects a fast 200, retries otherwise
@@ -324,7 +332,7 @@ if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
   const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps, liveHolderCount);
 const summary = buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps);
 const risk = scoreRisk(dex, sec);
-const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol, name: dex?.baseToken?.name, dex, sec, athAtl, risk };
+const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol, name: dex?.baseToken?.name, dex, sec, athAtl, risk, wallets, washTrading, dumps };
 
   reportCache.set(address.toLowerCase(), {
     data: result,
@@ -344,6 +352,48 @@ function extractAddress(text) {
   if (solMatch) return solMatch[0];
 
   return null;
+}
+async function runDailyDigest() {
+  const users = await getAllWatchlistUsers();
+  console.log(`Running daily digest for ${users.length} user(s)`);
+
+  for (const phone of users) {
+    const list = await getWatchlist(phone);
+    if (!list.length) continue;
+
+    const lines = [`☀️ *Good morning! Here's your watchlist update:*`, ``];
+
+    for (const addr of list) {
+      try {
+        const result = await getReport(addr);
+        const flags = getFlagSet(result.sec, result.wallets, result.washTrading, result.dumps);
+        const oldFlags = await getStoredFlags(addr);
+        const newFlags = findNewFlags(oldFlags, flags);
+        await storeFlags(addr, flags);
+
+        const symbol = result.symbol || "???";
+        const price = result.dex?.priceUsd || "N/A";
+        const change = result.dex?.priceChange24h;
+        const changeStr = change != null ? `${change > 0 ? "+" : ""}${change}%` : "N/A";
+
+        lines.push(`*${symbol}*: $${price} (${changeStr} 24h)`);
+        if (newFlags.length) {
+          newFlags.forEach((f) => lines.push(`  ${f}`));
+        }
+        lines.push(``);
+
+        await new Promise((r) => setTimeout(r, 500));
+      } catch (err) {
+        console.error(`Digest error for ${addr}:`, err.message);
+      }
+    }
+
+    lines.push(`_Reply "my watchlist" anytime for full details._`);
+    await sendText(phone, lines.join("\n"));
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+
+  console.log("Daily digest complete.");
 }
 
 app.listen(PORT, () => {
