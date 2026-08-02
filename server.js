@@ -12,6 +12,7 @@ const { detectDumpsIntoPumps } = require("./services/dumpDetection");
 const { buildReport, buildSummary, scoreRisk } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
+const { buildCompareReport } = require("./services/compare");
 
 
 const CHAIN_ALIASES = {
@@ -158,7 +159,25 @@ app.post("/webhook", async (req, res) => {
   if (result.chartUrl) await sendChartButton(from, result.chartUrl);
   await sendRefreshButton(from, addr);
   return;
-    }if (lowerText.startsWith("research ")) {
+    }
+    if (lowerText.startsWith("compare ")) {
+  const addresses = text.slice(8).trim().split(/\s+/).filter((w) => extractAddress(w));
+
+  if (addresses.length < 2) {
+    return sendText(from, "Send two contract addresses to compare, e.g.:\n`compare 0xABC... 0xDEF...`");
+  }
+
+  await sendText(from, `⚖️ Comparing both tokens... give me a few seconds.`);
+
+  const [resultA, resultB] = await Promise.all([
+    getReport(addresses[0]),
+    getReport(addresses[1]),
+  ]);
+
+  const comparison = buildCompareReport(resultA, resultB);
+  return sendText(from, comparison);
+    }
+    if (lowerText.startsWith("research ")) {
   const rawQuery = text.slice(9).trim();
   if (!rawQuery) return sendText(from, "Tell me a token name to search, e.g. `research pepe` or `research pepe on ethereum`");
 
