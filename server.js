@@ -129,37 +129,37 @@ app.post("/webhook", async (req, res) => {
     if (await isFirstTimeUser(from)) {
       await sendText(
   from,
-  `👋 *Welcome to ChainScope!*\n\n` +
-    `I'm your onchain research assistant. Here's exactly how to use me:\n\n` +
-    `*1️⃣ Paste a contract address*\n` +
-    `Send me any token's contract address and I'll check its price, safety, and more.\n` +
-    `Example: \`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
-    `*2️⃣ Or search by name*\n` +
-    `Don't have the address? Type \`research\` followed by the name.\n` +
-    `Example: \`research pepe\`\n` +
-    `I'll show you the matching tokens — reply with the number of the one you want.\n\n` +
-    `*3️⃣ Get more detail anytime*\n` +
-    `Every result starts with a quick summary. Tap *"📋 Full Report"* (or just type \`more\`) to see the complete breakdown — security checks, ATH/ATL, wallet analysis, and more.\n\n` +
-    `*Other commands:*\n` +
-    `👁️ \`watch <address>\` — save a token to check later\n` +
-    `🗑️ \`unwatch <address>\` — remove a saved token\n` +
-    `📋 \`my watchlist\` — check all saved tokens at once\n` +
-    `❓ \`menu\` — see this list again anytime\n\n` +
-    `Works on Ethereum, BSC, Base, and other EVM chains, plus Solana.\n\n` +
-    `⚠️ *Important:* Token names can be faked by scammers. Always double-check the contract address before trusting a result. Reports are for research only — not financial advice. Always DYOR.`
+  `👋 *Welcome to ChainScope.*\n\n` +
+    `I'm your onchain research assistant — send me a token, and I'll check its price, security, and history before you ever have to open a browser tab.\n\n` +
+    `*Try it now.* Send me a contract address:\n` +
+    `\`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
+    `Don't have the address? Just type \`research\` followed by a name, like \`research pepe\`.\n\n` +
+    `Type \`menu\` anytime to see everything I can do — comparisons, wallet audits, watchlists, and more.\n\n` +
+    `⚠️ Reports are for research only, not financial advice.
 );
     }
     const lowerText = text.toLowerCase().trim();
     if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
-      return sendText(
-        from,
-        `🤖 *ChainScope Commands*\n\n` +
-          `🔍 *Check a token*\nJust send a contract address, e.g.\n\`0x2170ed0880ac9a755fd29b2688956bd959f933f\`\n\n` +
-          `👁️ *watch <address>*\nAdd a token to your watchlist\n\n` +
-          `🗑️ *unwatch <address>*\nRemove a token from your watchlist\n\n` +
-          `📋 *my watchlist*\nCheck all your watched tokens at once\n\n` +
-          `❓ *menu* or *help*\nShow this message again`
-      );
+  return sendText(
+    from,
+    `📋 *ChainScope — Full Command List*\n\n` +
+      `*RESEARCH*\n` +
+      `🔍 Send any contract address to research it\n` +
+      `🔎 \`research <name>\` — search by name, e.g. \`research pepe\`\n` +
+      `🔎 \`research <name> on <chain>\` — narrow to one chain, e.g. \`research pepe on ethereum\`\n` +
+      `📋 \`more\` — get the full detailed report after any result\n\n` +
+      `*COMPARE & AUDIT*\n` +
+      `⚖️ \`compare <address1> <address2>\` — see two tokens side by side\n` +
+      `👜 \`audit <wallet address> <chain>\` — check every token a wallet holds for red flags\n\n` +
+      `*WATCHLIST*\n` +
+      `👁️ \`watch <address>\` — save a token to track\n` +
+      `🗑️ \`unwatch <address>\` — remove a saved token\n` +
+      `📋 \`my watchlist\` — see everything you're tracking\n` +
+      `☀️ You'll automatically get a free daily digest each morning for your watchlist — price, movement, and any new red flags\n\n` +
+      `*SUPPORTED CHAINS*\n` +
+      `Ethereum, BSC, Base, Polygon, Arbitrum, Optimism, Avalanche, Fantom, and Solana\n\n` +
+      `⚠️ Token names can be faked by scammers — always verify the contract address. Reports are for research only, not financial advice. 
+  );
     }
     if (lowerText === "more") {
   const addr = userLastAddress.get(from);
