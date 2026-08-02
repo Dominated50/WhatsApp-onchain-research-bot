@@ -86,4 +86,41 @@ async function getHistoricalMarketCapRange(coingeckoId, retrying = false) {
     return null;
   }
 }
-module.exports = { getCoingeckoListing, getHistoricalMarketCapRange };
+const ONCHAIN_NETWORK_MAP = {
+  ethereum: "eth",
+  bsc: "bsc",
+  polygon: "polygon_pos",
+  arbitrum: "arbitrum",
+  optimism: "optimism",
+  base: "base",
+  avalanche: "avax",
+  fantom: "ftm",
+  solana: "solana",
+};
+
+async function getLiveHolderCount(address, dexChainId, retrying = false) {
+  const network = ONCHAIN_NETWORK_MAP[dexChainId];
+  if (!network) return null;
+
+  try {
+    const { data } = await axios.get(
+      `https://api.coingecko.com/api/v3/onchain/networks/${network}/tokens/${address}/info`,
+      {
+        timeout: 8000,
+        headers: { "x-cg-demo-api-key": process.env.COINGECKO_API_KEY },
+      }
+    );
+
+    const count = data?.data?.attributes?.holders?.count;
+    return count != null ? parseInt(count) : null;
+  } catch (err) {
+    if (err.response?.status === 429 && !retrying) {
+      await sleep(2500);
+      return getLiveHolderCount(address, dexChainId, true);
+    }
+    if (err.response?.status === 404) return null; // token not indexed onchain, that's fine
+    console.error("CoinGecko onchain holder count error:", err.message);
+    return null;
+  }
+}
+module.exports = { getCoingeckoListing, getHistoricalMarketCapRange, getLiveHolderCount };
