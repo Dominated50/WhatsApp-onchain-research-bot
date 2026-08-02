@@ -187,5 +187,5 @@ function buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps) {
   return lines.join("\n");
 }
 
-module.exports = { buildReport, buildSummary };
+module.exports = { buildReport, buildSummary, scoreRisk };
 
