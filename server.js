@@ -12,7 +12,7 @@ const { detectDumpsIntoPumps } = require("./services/dumpDetection");
 const { buildReport, buildSummary } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
-const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
+
 
 const CHAIN_ALIASES = {
   eth: "ethereum", ethereum: "ethereum",
@@ -40,7 +40,7 @@ function extractChainFromQuery(text) {
 
 const app = express();
 
-const app = express();
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
