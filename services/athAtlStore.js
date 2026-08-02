@@ -30,9 +30,18 @@ async function updateStoredAthAtl(address, fresh) {
   try {
     const existing = await getStoredAthAtl(address);
 
-    const athImproved = fresh.athPrice != null && (!existing || existing.athPrice == null || fresh.athPrice > existing.athPrice);
-    const atlImproved = fresh.atlPrice != null && (!existing || existing.atlPrice == null || fresh.atlPrice < existing.atlPrice);
-
+    const athImproved = fresh.athPrice != null && (
+  !existing ||
+  existing.athPrice == null ||
+  fresh.athPrice > existing.athPrice ||
+  (fresh.athPrice === existing.athPrice && existing.athMarketCap == null && fresh.athMarketCap != null)
+);
+const atlImproved = fresh.atlPrice != null && (
+  !existing ||
+  existing.atlPrice == null ||
+  fresh.atlPrice < existing.atlPrice ||
+  (fresh.atlPrice === existing.atlPrice && existing.atlMarketCap == null && fresh.atlMarketCap != null)
+);
     // Only trust market cap figures that came attached to whichever price actually wins.
     // Never synthesize a market cap ourselves — that's how the trillion-dollar bug happened.
     const result = {
