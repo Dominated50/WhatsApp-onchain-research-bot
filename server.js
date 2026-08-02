@@ -187,7 +187,7 @@ app.post("/webhook", async (req, res) => {
   await getWalletHoldings(walletAddr, chain);
   return sendText(from, "Check Render logs for the raw response.");
     }
-    }
+    
     if (lowerText.startsWith("research ")) {
   const rawQuery = text.slice(9).trim();
   if (!rawQuery) return sendText(from, "Tell me a token name to search, e.g. `research pepe` or `research pepe on ethereum`");
