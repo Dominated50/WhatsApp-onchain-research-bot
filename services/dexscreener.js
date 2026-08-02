@@ -79,5 +79,41 @@ async function searchByName(query) {
     return [];
   }
 }
+async function searchByNameOnChain(query, chainId) {
+  try {
+    const { data } = await axios.get(
+      `https://api.dexscreener.com/latest/dex/search`,
+      { params: { q: query }, timeout: 8000 }
+    );
 
-module.exports = { getDexscreenerData, searchByName };
+    if (!data?.pairs?.length) return [];
+
+    const sorted = data.pairs
+      .filter((p) => p.liquidity?.usd)
+      .filter((p) => p.chainId === chainId)
+      .sort((a, b) => (b.liquidity.usd || 0) - (a.liquidity.usd || 0));
+
+    const seen = new Set();
+    const results = [];
+    for (const p of sorted) {
+      const addr = p.baseToken?.address?.toLowerCase();
+      if (!addr || seen.has(addr)) continue;
+      seen.add(addr);
+      results.push({
+        name: p.baseToken?.name || "Unknown",
+        symbol: p.baseToken?.symbol || "???",
+        address: p.baseToken?.address,
+        chainId: p.chainId,
+        liquidityUsd: p.liquidity?.usd || 0,
+      });
+      if (results.length >= 5) break;
+    }
+
+    return results;
+  } catch (err) {
+    console.error("Dexscreener chain search error:", err.message);
+    return [];
+  }
+}
+
+module.exports = { getDexscreenerData, searchByName, searchByNameOnChain };
