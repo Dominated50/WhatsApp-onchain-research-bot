@@ -13,7 +13,8 @@ const { buildReport, buildSummary, scoreRisk } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
 const { buildCompareReport } = require("./services/compare");
-const { getWalletHoldings } = require("./services/walletAudit");
+const { auditWallet } = require("./services/walletAudit");
+const { buildWalletAuditReport } = require("./services/walletAuditReport");
 
 
 const CHAIN_ALIASES = {
@@ -177,6 +178,21 @@ app.post("/webhook", async (req, res) => {
 
   const comparison = buildCompareReport(resultA, resultB);
   return sendText(from, comparison);
+    }
+    if (lowerText.startsWith("audit ")) {
+  const parts = text.slice(6).trim().split(/\s+/);
+  const walletAddr = parts[0];
+  const rawChain = parts[1]?.toLowerCase();
+  const chain = CHAIN_ALIASES[rawChain];
+
+  if (!walletAddr || !chain) {
+    return sendText(from, "Usage: `audit <wallet address> <chain>` — e.g. `audit 0x791f... ethereum`");
+  }
+
+  await sendText(from, `🔍 Auditing your wallet on ${chain}... this may take a moment.`);
+  const audit = await auditWallet(walletAddr, chain);
+  const report = buildWalletAuditReport(audit, walletAddr, chain);
+  return sendText(from, report);
     }
     if (lowerText.startsWith("testwallet ")) {
   const parts = text.slice(11).trim().split(/\s+/);
