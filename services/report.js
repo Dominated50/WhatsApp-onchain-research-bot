@@ -45,7 +45,7 @@ function scoreRisk(dex, sec) {
 
 const { getHoldersUrl } = require("./chains");
 
-function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps) {
+function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps, liveHolderCount) {
   if (!dex) {
     return `⚠️ *No trading pair found* for:\n\`${address}\`\n\nThis token may not be listed on any DEX yet, or the address may be invalid.`;
   }
@@ -82,7 +82,8 @@ function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, d
     lines.push(`🏗 Ownership: ${sec.ownershipRenounced ? "Renounced ✅" : "Not renounced ⚠️"}`);
     if (sec.isMintable !== null) lines.push(`🖨 Mintable: ${sec.isMintable ? "Yes ⚠️" : "No ✅"}`);
     if (sec.top10HolderPct !== null) lines.push(`👛 Top 10 Holders (excl. LP/burn): ${sec.top10HolderPct}%`);
-    if (sec.holderCount != null) lines.push(`👥 Total Holders: ${sec.holderCount.toLocaleString()}`);
+    const holderCount = liveHolderCount ?? sec.holderCount;
+if (holderCount != null) lines.push(`👥 Total Holders: ${holderCount.toLocaleString()}${liveHolderCount != null ? "" : " (approx.)"}`);
     if (sec.creatorPercent !== null) {
       lines.push(`👤 Creator Holds: ${sec.creatorPercent}%${parseFloat(sec.creatorPercent) > 10 ? " ⚠️" : ""}`);
     }
