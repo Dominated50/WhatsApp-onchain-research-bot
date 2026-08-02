@@ -9,7 +9,7 @@ const { getCmcListing } = require("./services/coinmarketcap");
 const { analyzeWallets } = require("./services/walletAnalysis");
 const { detectWashTrading } = require("./services/washTrading");
 const { detectDumpsIntoPumps } = require("./services/dumpDetection");
-const { buildReport, buildSummary } = require("./services/report");
+const { buildReport, buildSummary, scoreRisk } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
 
@@ -285,7 +285,8 @@ if (dex?.pairAddress && dex?.priceUsd && dex?.marketCap) {
 }
   const report = buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, dumps, liveHolderCount);
 const summary = buildSummary(address, dex, sec, athAtl, wallets, washTrading, dumps);
-const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol, name: dex?.baseToken?.name };
+const risk = scoreRisk(dex, sec);
+const result = { text: report, summary, chartUrl: dex?.url || null, imageUrl: dex?.imageUrl || null, symbol: dex?.baseToken?.symbol, name: dex?.baseToken?.name, dex, sec, athAtl, risk };
 
   reportCache.set(address.toLowerCase(), {
     data: result,
