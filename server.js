@@ -13,6 +13,7 @@ const { buildReport, buildSummary, scoreRisk } = require("./services/report");
 const { sendText, markAsRead, sendChartButton, sendImage, sendRefreshButton, sendMoreButton } = require("./services/whatsapp");
 const { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser } = require("./services/watchlist");
 const { buildCompareReport } = require("./services/compare");
+const { getWalletHoldings } = require("./services/walletAudit");
 
 
 const CHAIN_ALIASES = {
@@ -176,6 +177,14 @@ app.post("/webhook", async (req, res) => {
 
   const comparison = buildCompareReport(resultA, resultB);
   return sendText(from, comparison);
+    }
+    if (lowerText.startsWith("testwallet ")) {
+  const parts = text.slice(11).trim().split(/\s+/);
+  const walletAddr = parts[0];
+  const chain = parts[1];
+  if (!walletAddr || !chain) return sendText(from, "Usage: `testwallet <address> <chain>`");
+  await getWalletHoldings(walletAddr, chain);
+  return sendText(from, "Check Render logs for the raw response.");
     }
     if (lowerText.startsWith("research ")) {
   const rawQuery = text.slice(9).trim();
