@@ -194,15 +194,7 @@ app.post("/webhook", async (req, res) => {
   const report = buildWalletAuditReport(audit, walletAddr, chain);
   return sendText(from, report);
     }
-    if (lowerText.startsWith("testwallet ")) {
-  const parts = text.slice(11).trim().split(/\s+/);
-  const walletAddr = parts[0];
-  const rawChain = parts[1]?.toLowerCase();
-  const chain = CHAIN_ALIASES[rawChain];
-  if (!walletAddr || !chain) return sendText(from, "Usage: `testwallet <address> <chain>` — e.g. `testwallet 0x... ethereum`");
-  await getWalletHoldings(walletAddr, chain);
-  return sendText(from, "Check Render logs for the raw response.");
-    }
+    
     
     if (lowerText.startsWith("research ")) {
   const rawQuery = text.slice(9).trim();
