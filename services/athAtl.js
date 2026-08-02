@@ -9,18 +9,25 @@ async function getBestAthAtl(dex, currentSupply, cg) {
   // If the token is listed on CoinGecko, trust their number first —
   // it tracks the token's full history, not just one trading pool.
   if (cg?.listed && cg.ath) {
-  const capHistory = await getHistoricalMarketCapRange(cg.coingeckoId);
-  const freshCg = {
-  athPrice: cg.ath,
-  athPriceDate: null,
-  atlPrice: cg.atl,
-  atlPriceDate: null,
-  athMarketCap: athWithinRange ? (capHistory?.athMarketCap || null) : null,
-  atlMarketCap: atlWithinRange ? (capHistory?.atlMarketCap || null) : null,
-  currentSupply,
-};
-return await updateStoredAthAtl(dex.baseToken?.address, freshCg);
-  }
+    const athWithinRange = cg.athDate && (Date.now() - new Date(cg.athDate).getTime()) < 365 * 24 * 60 * 60 * 1000;
+    const atlWithinRange = cg.atlDate && (Date.now() - new Date(cg.atlDate).getTime()) < 365 * 24 * 60 * 60 * 1000;
+
+    let capHistory = null;
+    if (athWithinRange || atlWithinRange) {
+      capHistory = await getHistoricalMarketCapRange(cg.coingeckoId);
+    }
+
+    const freshCg = {
+      athPrice: cg.ath,
+      athPriceDate: null,
+      atlPrice: cg.atl,
+      atlPriceDate: null,
+      athMarketCap: athWithinRange ? (capHistory?.athMarketCap || null) : null,
+      atlMarketCap: atlWithinRange ? (capHistory?.atlMarketCap || null) : null,
+      currentSupply,
+    };
+    return await updateStoredAthAtl(dex.baseToken?.address, freshCg);
+        }
 
   const tokenAddress = dex.baseToken?.address;
   const results = [];
