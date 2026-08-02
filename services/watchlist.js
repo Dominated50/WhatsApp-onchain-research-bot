@@ -12,10 +12,10 @@ const client = axios.create({
 function keyFor(phone) {
   return `watchlist:${phone}`;
 }
-
 async function addToWatchlist(phone, address) {
   try {
     await client.get(`/sadd/${keyFor(phone)}/${address.toLowerCase()}`);
+    await client.get(`/sadd/watchlist_users/${phone}`);
     return true;
   } catch (err) {
     console.error("Watchlist add error:", err.message);
@@ -54,5 +54,14 @@ async function isFirstTimeUser(phone) {
     return false; // fail safe: don't spam onboarding if Redis hiccups
   }
 }
+async function getAllWatchlistUsers() {
+  try {
+    const { data } = await client.get(`/smembers/watchlist_users`);
+    return data?.result || [];
+  } catch (err) {
+    console.error("Get watchlist users error:", err.message);
+    return [];
+  }
+}
 
-module.exports = { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser };
+module.exports = { addToWatchlist, removeFromWatchlist, getWatchlist, isFirstTimeUser, getAllWatchlistUsers };
