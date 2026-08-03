@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const axios = require("axios");
 const { detectAddressType } = require("./services/chains");
 const { getDexscreenerData, searchByName, searchByNameOnChain } = require("./services/dexscreener");
 const { getSecurityData } = require("./services/goplus");
@@ -17,6 +18,7 @@ const { auditWallet } = require("./services/walletAudit");
 const { buildWalletAuditReport } = require("./services/walletAuditReport");
 const { getFlagSet, getStoredFlags, storeFlags, findNewFlags } = require("./services/digest");
 const { getAllWatchlistUsers } = require("./services/watchlist");
+const { extractTextFromImage, extractAddressFromText } = require("./services/ocr");
 
 const CHAIN_ALIASES = {
   eth: "ethereum", ethereum: "ethereum",
@@ -115,7 +117,47 @@ app.post("/webhook", async (req, res) => {
     return;
   }
   }
-    
+    // Handle image messages (OCR contract address extraction)
+  if (message.type === "image") {
+    try {
+      const mediaId = message.image.id;
+      const mediaUrlRes = await axios.get(
+        `https://graph.facebook.com/v20.0/${mediaId}`,
+        { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } }
+      );
+      const imageUrl = mediaUrlRes.data.url;
+
+      const imageRes = await axios.get(imageUrl, {
+        headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` },
+        responseType: "arraybuffer",
+      });
+      const imageBuffer = Buffer.from(imageRes.data);
+
+      const extractedText = await extractTextFromImage(imageBuffer);
+      const found = extractedText ? extractAddressFromText(extractedText) : null;
+
+      if (!found) {
+        await sendText(
+          from,
+          "I couldn't find a contract address in that image — try sending a clearer screenshot or pasting the address directly."
+        );
+        return;
+      }
+
+      const result = await getReport(found.address);
+      await sendText(from, result.text);
+      if (result.chartUrl) await sendChartButton(from, result.chartUrl);
+      await sendRefreshButton(from, found.address);
+      return;
+    } catch (err) {
+      console.error("❌ Image OCR handling failed:", err.message);
+      await sendText(
+        from,
+        "Something went wrong reading that image. Please try again or paste the contract address directly."
+      );
+      return;
+    }
+  }
 
     if (message.type !== "text") return;
     const text = message.text.body.trim();
