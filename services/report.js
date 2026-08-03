@@ -81,7 +81,7 @@ let cmcNote;
      ...(athAtl?.athMarketCap ? [`📈 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
      ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
      ...(!athAtl ? [`📊 ATH/ATL: Not available for this token yet`] : []),
-   🟡 CoinMarketCap: ${cmcNote}`,
+  '🟡 CoinMarketCap: ${cmcNote}`,
     ];
 
   if (sec) {
