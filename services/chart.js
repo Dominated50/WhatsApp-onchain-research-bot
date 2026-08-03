@@ -54,4 +54,55 @@ async function buildChartUrl(priceData, tokenName) {
   }
 }
 
-module.exports = { buildChartUrl };
+async function buildCandlestickChartUrl(ohlcData, tokenName) {
+  if (!ohlcData || !ohlcData.length) return null;
+
+  const dataset = {
+    label: tokenName || "Price",
+    data: ohlcData.map((c) => ({
+      x: c.time,
+      o: c.open,
+      h: c.high,
+      l: c.low,
+      c: c.close,
+    })),
+    color: {
+      up: "#22c55e",
+      down: "#ef4444",
+      unchanged: "#999999",
+    },
+  };
+
+  const chartConfig = {
+    type: "candlestick",
+    data: { datasets: [dataset] },
+    options: {
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: `ChainScope — ${tokenName || "Token"} — Last 30 Days`,
+        },
+      },
+      scales: {
+        x: { type: "time", time: { unit: "day" }, ticks: { maxTicksLimit: 8 } },
+      },
+    },
+  };
+
+  try {
+    const response = await axios.post("https://quickchart.io/chart/create", {
+      chart: chartConfig,
+      width: 800,
+      height: 400,
+      backgroundColor: "white",
+      version: "3",
+    });
+    return response.data?.url || null;
+  } catch (err) {
+    console.error("QuickChart candlestick create error:", err.message);
+    return null;
+  }
+}
+
+module.exports = { buildChartUrl, buildCandlestickChartUrl };
