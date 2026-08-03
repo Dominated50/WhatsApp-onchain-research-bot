@@ -62,6 +62,7 @@ async function getAthAtlFromBirdeye(tokenAddress, chainId, currentSupply) {
     return null;
   }
 }
+
 async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
   const chain = CHAIN_TO_BIRDEYE[chainId];
   if (!chain || !tokenAddress) return null;
@@ -87,7 +88,21 @@ async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
         timeout: 10000,
       }
     );
-    async function getOhlcvFromBirdeye(tokenAddress, chainId, days = 30) {
+
+    const items = data?.data?.items;
+    if (!items || !items.length) return null;
+
+    return items.map((point) => ({
+      time: point.unixTime * 1000,
+      price: point.value,
+    }));
+  } catch (err) {
+    console.error("Birdeye price history error:", err.message);
+    return null;
+  }
+}
+
+async function getOhlcvFromBirdeye(tokenAddress, chainId, days = 30) {
   const chain = CHAIN_TO_BIRDEYE[chainId];
   if (!chain || !tokenAddress) return null;
 
@@ -126,18 +141,6 @@ async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
     console.error("Birdeye OHLCV error:", err.message);
     return null;
   }
-    }
-
-    const items = data?.data?.items;
-    if (!items || !items.length) return null;
-
-    return items.map((point) => ({
-      time: point.unixTime * 1000,
-      price: point.value,
-    }));
-  } catch (err) {
-    console.error("Birdeye price history error:", err.message);
-    return null;
-  }
 }
+
 module.exports = { getAthAtlFromBirdeye, getPriceHistoryFromBirdeye, getOhlcvFromBirdeye };
