@@ -287,6 +287,7 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
     console.log("📈 Building chart URL for", tokenName);
     const chartImageUrl = await buildChartUrl(priceHistory, tokenName);
     console.log("📈 Chart URL length:", chartImageUrl ? chartImageUrl.length : "null");
+     console.log("📈 Chart URL:", chartImageUrl);
     if (!chartImageUrl) return sendText(from, "Sorry, something went wrong building that chart.");
 
     console.log("📈 Sending image...");
