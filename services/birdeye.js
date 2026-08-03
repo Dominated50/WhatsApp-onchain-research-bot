@@ -62,5 +62,42 @@ async function getAthAtlFromBirdeye(tokenAddress, chainId, currentSupply) {
     return null;
   }
 }
+async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
+  const chain = CHAIN_TO_BIRDEYE[chainId];
+  if (!chain || !tokenAddress) return null;
 
-module.exports = { getAthAtlFromBirdeye };
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const timeFrom = now - days * 24 * 60 * 60;
+
+    const { data } = await axios.get(
+      "https://public-api.birdeye.so/defi/history_price",
+      {
+        params: {
+          address: tokenAddress,
+          address_type: "token",
+          type: "1H", // hourly candles for a smoother short-range chart
+          time_from: timeFrom,
+          time_to: now,
+        },
+        headers: {
+          "X-API-KEY": process.env.BIRDEYE_API_KEY,
+          "x-chain": chain,
+        },
+        timeout: 10000,
+      }
+    );
+
+    const items = data?.data?.items;
+    if (!items || !items.length) return null;
+
+    return items.map((point) => ({
+      time: point.unixTime * 1000,
+      price: point.value,
+    }));
+  } catch (err) {
+    console.error("Birdeye price history error:", err.message);
+    return null;
+  }
+}
+module.exports = { getAthAtlFromBirdeye, getPriceHistoryFromBirdeye };
