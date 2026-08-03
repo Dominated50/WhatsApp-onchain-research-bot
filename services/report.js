@@ -72,7 +72,7 @@ function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, d
      ...(athAtl?.athMarketCap ? [`📈 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
      ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
      ...(!athAtl ? [`📊 ATH/ATL: Not available for this token yet`] : []),
-    `🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? `Unclear — check manually: https://coinmarketcap.com/search/?q=${encodeURIComponent(address)}` (Note: CMC's search page can error out for newer/unlisted tokens — that's usually a sign it isn't listed there yet) : cmc?.listed ? "Listed ✅" : cmc ? "Not listed" : "Unknown (check failed)"}`,
+    🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? `Unclear — check manually: https://coinmarketcap.com/search/?q=${encodeURIComponent(address)} (Note: CMC's search page can error out for newer/unlisted tokens — that's usually a sign it isn't listed there yet)` : cmc?.listed ? "Listed ✅" : cmc?.listed === false ? "Not listed" : "Unknown (check failed)"}`,
     ];
 
   if (sec) {
