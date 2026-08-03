@@ -53,12 +53,13 @@ async function buildChartUrl(priceData, tokenName) {
     return null;
   }
 }
-
-async function buildCandlestickChartUrl(ohlcData, tokenName) {
+async function buildCandlestickChartUrl(ohlcData, tokenName, mode = "price") {
   if (!ohlcData || !ohlcData.length) return null;
 
+  const label = mode === "mcap" ? "Market Cap" : "Price";
+
   const dataset = {
-    label: tokenName || "Price",
+    label: tokenName || label,
     data: ohlcData.map((c) => ({
       x: c.time,
       o: c.open,
@@ -81,7 +82,7 @@ async function buildCandlestickChartUrl(ohlcData, tokenName) {
         legend: { display: false },
         title: {
           display: true,
-          text: `ChainScope — ${tokenName || "Token"} — Last 30 Days`,
+          text: `ChainScope — ${tokenName || "Token"} ${label} — Last 30 Days`,
         },
       },
       scales: {
