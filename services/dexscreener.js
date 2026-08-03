@@ -1,24 +1,37 @@
 const axios = require("axios");
 
+// --- Simple in-memory cache to avoid hitting Dexscreener's rate limit ---
+const dexCache = new Map(); // address -> { data, expiresAt }
+const DEX_CACHE_TTL_MS = 30 * 1000; // 30 seconds
+
 /**
  * Fetches token pair data from Dexscreener. Free, no API key required.
  * Returns the most liquid pair for the token, or null if nothing found.
  */
 async function getDexscreenerData(contractAddress) {
+  const cacheKey = contractAddress.toLowerCase();
+  const cached = dexCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
   try {
     const { data } = await axios.get(
       `https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`,
       { timeout: 8000 }
     );
 
-    if (!data?.pairs?.length) return null;
+    if (!data?.pairs?.length) {
+      dexCache.set(cacheKey, { data: null, expiresAt: Date.now() + DEX_CACHE_TTL_MS });
+      return null;
+    }
 
     // Pick the pair with the highest liquidity — usually the "real" market
     const bestPair = data.pairs.reduce((best, pair) =>
       (pair.liquidity?.usd || 0) > (best.liquidity?.usd || 0) ? pair : best
     );
 
-    return {
+    const result = {
       chainId: bestPair.chainId, // e.g. "ethereum", "bsc", "solana"
       allDexes: [...new Set(data.pairs.map((p) => p.dexId))],
       dexId: bestPair.dexId,
@@ -38,6 +51,9 @@ async function getDexscreenerData(contractAddress) {
       url: bestPair.url,
       imageUrl: bestPair.info?.imageUrl || null,
     };
+
+    dexCache.set(cacheKey, { data: result, expiresAt: Date.now() + DEX_CACHE_TTL_MS });
+    return result;
   } catch (err) {
     console.error("Dexscreener error:", err.message);
     return null;
