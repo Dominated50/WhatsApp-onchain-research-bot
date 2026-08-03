@@ -36,7 +36,6 @@ async function buildChartUrl(priceData, tokenName) {
       },
       scales: {
         x: { ticks: { maxTicksLimit: 8 } },
-        y: { ticks: { callback: "function(v) { return '$' + v; }" } },
       },
     },
   };
