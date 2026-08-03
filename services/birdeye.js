@@ -76,7 +76,7 @@ async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
         params: {
           address: tokenAddress,
           address_type: "token",
-          type: "1H", // hourly candles for a smoother short-range chart
+          type: "1D", // daily candles - keeps chart under QuickChart's data point limit
           time_from: timeFrom,
           time_to: now,
         },
