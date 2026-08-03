@@ -265,11 +265,14 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
     }
     
    if (lowerText.startsWith("chart ")) {
-    const address = extractAddress(text);
-    if (!address) return sendText(from, "Send a valid contract address to chart, e.g. `chart 0x2170ed0880ac9a755fd29b2688956bd959f933f`");
+    const parts = text.slice(6).trim().split(/\s+/);
+    const address = extractAddress(parts[0]);
+    const mode = parts[1]?.toLowerCase() === "mcap" ? "mcap" : "price";
 
-    console.log("📈 Chart command started for", address);
-    await sendText(from, `📈 Generating price chart for \`${address}\`... give me a few seconds.`);
+    if (!address) return sendText(from, "Send a valid contract address to chart, e.g. `chart 0x2170ed0880ac9a755fd29b2688956bd959f933f` or add `mcap` for market cap: `chart 0x2170ed0880ac9a755fd29b2688956bd959f933f mcap`");
+
+    console.log("📈 Chart command started for", address, "mode:", mode);
+    await sendText(from, `📈 Generating ${mode === "mcap" ? "market cap" : "price"} chart for \`${address}\`... give me a few seconds.`);
 
     console.log("📈 Fetching dex data...");
     const dex = await getDexscreenerData(address);
@@ -277,20 +280,34 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
     if (!dex) return sendText(from, "Couldn't find trading data for that token — check the address and try again.");
 
     console.log("📈 Fetching OHLCV from Birdeye, chainId:", dex.chainId);
-    const ohlcData = await getOhlcvFromBirdeye(address, dex.chainId, 30);
+    let ohlcData = await getOhlcvFromBirdeye(address, dex.chainId, 30);
     console.log("📈 OHLCV result:", ohlcData ? `${ohlcData.length} candles` : "null");
     if (!ohlcData) {
-      return sendText(from, "Sorry, I couldn't generate a price chart for this token right now — historical data may not be available yet.");
+      return sendText(from, "Sorry, I couldn't generate a chart for this token right now — historical data may not be available yet.");
+    }
+
+    if (mode === "mcap") {
+      const estimatedSupply = dex.marketCap && dex.priceUsd ? dex.marketCap / parseFloat(dex.priceUsd) : null;
+      if (!estimatedSupply) {
+        return sendText(from, "Sorry, I couldn't estimate this token's supply to build a market cap chart. Try a price chart instead: `chart " + address + "`");
+      }
+      ohlcData = ohlcData.map((c) => ({
+        time: c.time,
+        open: c.open * estimatedSupply,
+        high: c.high * estimatedSupply,
+        low: c.low * estimatedSupply,
+        close: c.close * estimatedSupply,
+      }));
     }
 
     const tokenName = dex.baseToken?.symbol || dex.baseToken?.name || "Token";
-    console.log("📈 Building candlestick chart URL for", tokenName);
-    const chartImageUrl = await buildCandlestickChartUrl(ohlcData, tokenName);
+    console.log("📈 Building candlestick chart URL for", tokenName, mode);
+    const chartImageUrl = await buildCandlestickChartUrl(ohlcData, tokenName, mode);
     console.log("📈 Chart URL:", chartImageUrl);
     if (!chartImageUrl) return sendText(from, "Sorry, something went wrong building that chart.");
 
     console.log("📈 Sending image...");
-    await sendImage(from, chartImageUrl, `${tokenName} — Last 30 Days`);
+    await sendImage(from, chartImageUrl, `${tokenName} — ${mode === "mcap" ? "Market Cap" : "Price"} — Last 30 Days`);
     console.log("📈 Chart command completed");
     return;
    }
