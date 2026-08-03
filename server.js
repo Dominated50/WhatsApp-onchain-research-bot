@@ -19,6 +19,8 @@ const { buildWalletAuditReport } = require("./services/walletAuditReport");
 const { getFlagSet, getStoredFlags, storeFlags, findNewFlags } = require("./services/digest");
 const { getAllWatchlistUsers } = require("./services/watchlist");
 const { extractTextFromImage, extractAddressFromText } = require("./services/ocr");
+const { getPriceHistoryFromBirdeye } = require("./services/birdeye");
+const { buildChartUrl } = require("./services/chart");
 
 const CHAIN_ALIASES = {
   eth: "ethereum", ethereum: "ethereum",
@@ -262,7 +264,27 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
   return sendText(from, report);
     }
     
-    
+    if (lowerText.startsWith("chart ")) {
+    const address = extractAddress(text);
+    if (!address) return sendText(from, "Send a valid contract address to chart, e.g. `chart 0x2170ed0880ac9a755fd29b2688956bd959f933f`");
+
+    await sendText(from, `📈 Generating price chart for \`${address}\`... give me a few seconds.`);
+
+    const dex = await getDexscreenerData(address);
+    if (!dex) return sendText(from, "Couldn't find trading data for that token — check the address and try again.");
+
+    const priceHistory = await getPriceHistoryFromBirdeye(address, dex.chainId, 30);
+    if (!priceHistory) {
+      return sendText(from, "Sorry, I couldn't generate a price chart for this token right now — historical data may not be available yet.");
+    }
+
+    const tokenName = dex.baseToken?.symbol || dex.baseToken?.name || "Token";
+    const chartImageUrl = buildChartUrl(priceHistory, tokenName);
+    if (!chartImageUrl) return sendText(from, "Sorry, something went wrong building that chart.");
+
+    await sendImage(from, chartImageUrl, `${tokenName} — Last 30 Days`);
+    return;
+      }
     if (lowerText.startsWith("research ")) {
   const rawQuery = text.slice(9).trim();
   if (!rawQuery) return sendText(from, "Tell me a token name to search, e.g. `research pepe` or `research pepe on ethereum`");
