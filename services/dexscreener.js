@@ -16,11 +16,24 @@ async function getDexscreenerData(contractAddress) {
   }
 
   try {
-    const { data } = await axios.get(
-      `https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`,
-      { timeout: 8000 }
-    );
-
+    let data;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await axios.get(
+          `https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`,
+          { timeout: 8000 }
+        );
+        data = response.data;
+        break;
+      } catch (err) {
+        if (err.response?.status === 429 && attempt < 3) {
+          console.log(`Dexscreener 429, retrying in ${attempt}s... (attempt ${attempt})`);
+          await new Promise((r) => setTimeout(r, attempt * 1000));
+          continue;
+        }
+        throw err;
+      }
+    }
     if (!data?.pairs?.length) {
       dexCache.set(cacheKey, { data: null, expiresAt: Date.now() + DEX_CACHE_TTL_MS });
       return null;
