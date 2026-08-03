@@ -22,14 +22,17 @@ async function extractTextFromImage(imageBuffer) {
   const text = result.ParsedResults?.[0]?.ParsedText || "";
   return text.trim();
 }
-
 function extractAddressFromText(text) {
+  // Remove line breaks and extra spaces that OCR sometimes inserts
+  // when an address wraps across two lines in an image
+  const cleaned = text.replace(/\s+/g, "");
+
   // EVM address: 0x + 40 hex characters
-  const evmMatch = text.match(/0x[a-fA-F0-9]{40}/);
+  const evmMatch = cleaned.match(/0x[a-fA-F0-9]{40}/);
   if (evmMatch) return { address: evmMatch[0], type: "evm" };
 
   // Solana address: base58, roughly 32-44 characters
-  const solMatch = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+  const solMatch = cleaned.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
   if (solMatch) return { address: solMatch[0], type: "solana" };
 
   return null;
