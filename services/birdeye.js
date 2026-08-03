@@ -87,6 +87,46 @@ async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
         timeout: 10000,
       }
     );
+    async function getOhlcvFromBirdeye(tokenAddress, chainId, days = 30) {
+  const chain = CHAIN_TO_BIRDEYE[chainId];
+  if (!chain || !tokenAddress) return null;
+
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const timeFrom = now - days * 24 * 60 * 60;
+
+    const { data } = await axios.get(
+      "https://public-api.birdeye.so/defi/ohlcv",
+      {
+        params: {
+          address: tokenAddress,
+          type: "1D",
+          time_from: timeFrom,
+          time_to: now,
+        },
+        headers: {
+          "X-API-KEY": process.env.BIRDEYE_API_KEY,
+          "x-chain": chain,
+        },
+        timeout: 10000,
+      }
+    );
+
+    const items = data?.data?.items;
+    if (!items || !items.length) return null;
+
+    return items.map((c) => ({
+      time: c.unixTime * 1000,
+      open: c.o,
+      high: c.h,
+      low: c.l,
+      close: c.c,
+    }));
+  } catch (err) {
+    console.error("Birdeye OHLCV error:", err.message);
+    return null;
+  }
+    }
 
     const items = data?.data?.items;
     if (!items || !items.length) return null;
@@ -100,4 +140,4 @@ async function getPriceHistoryFromBirdeye(tokenAddress, chainId, days = 30) {
     return null;
   }
 }
-module.exports = { getAthAtlFromBirdeye, getPriceHistoryFromBirdeye };
+module.exports = { getAthAtlFromBirdeye, getPriceHistoryFromBirdeye, getOhlcvFromBirdeye };
