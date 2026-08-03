@@ -264,27 +264,36 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
   return sendText(from, report);
     }
     
-    if (lowerText.startsWith("chart ")) {
+   if (lowerText.startsWith("chart ")) {
     const address = extractAddress(text);
     if (!address) return sendText(from, "Send a valid contract address to chart, e.g. `chart 0x2170ed0880ac9a755fd29b2688956bd959f933f`");
 
+    console.log("📈 Chart command started for", address);
     await sendText(from, `📈 Generating price chart for \`${address}\`... give me a few seconds.`);
 
+    console.log("📈 Fetching dex data...");
     const dex = await getDexscreenerData(address);
+    console.log("📈 Dex data result:", dex ? "found" : "null");
     if (!dex) return sendText(from, "Couldn't find trading data for that token — check the address and try again.");
 
+    console.log("📈 Fetching price history from Birdeye, chainId:", dex.chainId);
     const priceHistory = await getPriceHistoryFromBirdeye(address, dex.chainId, 30);
+    console.log("📈 Price history result:", priceHistory ? `${priceHistory.length} points` : "null");
     if (!priceHistory) {
       return sendText(from, "Sorry, I couldn't generate a price chart for this token right now — historical data may not be available yet.");
     }
 
     const tokenName = dex.baseToken?.symbol || dex.baseToken?.name || "Token";
+    console.log("📈 Building chart URL for", tokenName);
     const chartImageUrl = buildChartUrl(priceHistory, tokenName);
+    console.log("📈 Chart URL length:", chartImageUrl ? chartImageUrl.length : "null");
     if (!chartImageUrl) return sendText(from, "Sorry, something went wrong building that chart.");
 
+    console.log("📈 Sending image...");
     await sendImage(from, chartImageUrl, `${tokenName} — Last 30 Days`);
+    console.log("📈 Chart command completed");
     return;
-      }
+   }
     if (lowerText.startsWith("research ")) {
   const rawQuery = text.slice(9).trim();
   if (!rawQuery) return sendText(from, "Tell me a token name to search, e.g. `research pepe` or `research pepe on ethereum`");
