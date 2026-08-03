@@ -1,4 +1,6 @@
-function buildChartUrl(priceData, tokenName) {
+const axios = require("axios");
+
+async function buildChartUrl(priceData, tokenName) {
   if (!priceData || !priceData.length) return null;
 
   const labels = priceData.map((p) => {
@@ -39,8 +41,18 @@ function buildChartUrl(priceData, tokenName) {
     },
   };
 
-  const encoded = encodeURIComponent(JSON.stringify(chartConfig));
-  return `https://quickchart.io/chart?c=${encoded}&width=800&height=400&backgroundColor=white`;
+  try {
+    const response = await axios.post("https://quickchart.io/chart/create", {
+      chart: chartConfig,
+      width: 800,
+      height: 400,
+      backgroundColor: "white",
+    });
+    return response.data?.url || null;
+  } catch (err) {
+    console.error("QuickChart create error:", err.message);
+    return null;
+  }
 }
 
 module.exports = { buildChartUrl };
