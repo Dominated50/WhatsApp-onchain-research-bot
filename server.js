@@ -73,11 +73,14 @@ app.get("/webhook", (req, res) => {
 });
 
 app.get("/daily-digest", async (req, res) => {
+  console.log("🔔 /daily-digest hit at", new Date().toISOString());
   if (req.query.key !== process.env.DIGEST_SECRET) {
     return res.status(403).send("Forbidden");
   }
   res.status(200).send("Digest started");
-  runDailyDigest().catch((err) => console.error("Digest run failed:", err));
+  runDailyDigest()
+    .then(() => console.log("✅ Digest completed successfully"))
+    .catch((err) => console.error("❌ Digest run failed:", err));
 });
 // --- 2. Incoming messages ---
 app.post("/webhook", async (req, res) => {
