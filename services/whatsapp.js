@@ -13,16 +13,52 @@ const client = axios.create({
   timeout: 10000,
 });
 
+const MAX_MESSAGE_LENGTH = 4000; // stay safely under WhatsApp's 4096 char limit
+
 async function sendText(to, body) {
-  try {
-    await client.post("/messages", {
-      messaging_product: "whatsapp",
-      to,
-      type: "text",
-      text: { body, preview_url: false },
-    });
-  } catch (err) {
-    console.error("WhatsApp send error:", err.response?.data || err.message);
+  if (!body) return;
+
+  if (body.length <= MAX_MESSAGE_LENGTH) {
+    try {
+      await client.post("/messages", {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body, preview_url: false },
+      });
+    } catch (err) {
+      console.error("WhatsApp send error:", err.response?.data || err.message);
+    }
+    return;
+  }
+
+  // Message too long — split into chunks, preferring to break at line breaks
+  const chunks = [];
+  let remaining = body;
+  while (remaining.length > MAX_MESSAGE_LENGTH) {
+    let splitAt = remaining.lastIndexOf("\n", MAX_MESSAGE_LENGTH);
+    if (splitAt === -1 || splitAt < MAX_MESSAGE_LENGTH * 0.5) {
+      splitAt = MAX_MESSAGE_LENGTH; // no good line break found, hard cut
+    }
+    chunks.push(remaining.slice(0, splitAt));
+    remaining = remaining.slice(splitAt).trimStart();
+  }
+  if (remaining.length) chunks.push(remaining);
+
+  console.log(`Message too long (${body.length} chars), splitting into ${chunks.length} parts`);
+
+  for (const chunk of chunks) {
+    try {
+      await client.post("/messages", {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: chunk, preview_url: false },
+      });
+    } catch (err) {
+      console.error("WhatsApp send error:", err.response?.data || err.message);
+    }
+    await new Promise((r) => setTimeout(r, 300)); // small delay so messages arrive in order
   }
 }
 async function sendChartButton(to, chartUrl) {
