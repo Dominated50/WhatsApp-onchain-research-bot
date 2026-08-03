@@ -58,11 +58,12 @@ let cmcNote;
     cmcNote = "Unclear - check manually: https://coinmarketcap.com/search/?q=" + encodeURIComponent(address) + " (Note: CMC search can error for newer or unlisted tokens, which usually means it is not listed there yet)";
   } else if (cmc?.listed === true) {
     cmcNote = "Listed";
-  } else if (cmc?.listed === false) {
+ } else if (cmc?.listed === false) {
     cmcNote = "Not listed";
   } else {
     cmcNote = "Unknown (check failed)";
   }
+
   const lines = [
     `🔍 *${dex.baseToken?.name || "Unknown"} ($${symbol})*`,
     `Chain: ${dex.chainId} | Age: ${ageFromTimestamp(dex.pairCreatedAt)}`,
@@ -81,7 +82,7 @@ let cmcNote;
      ...(athAtl?.athMarketCap ? [`📈 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
      ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
      ...(!athAtl ? [`📊 ATH/ATL: Not available for this token yet`] : []),
-  '🟡 CoinMarketCap: ${cmcNote}`,
+  `🟡 CoinMarketCap: ${cmcNote}`,
     ];
 
   if (sec) {
