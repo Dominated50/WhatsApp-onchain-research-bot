@@ -53,7 +53,16 @@ function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, d
   const risk = scoreRisk(dex, sec);
   const symbol = dex.baseToken?.symbol || "???";
   const riskEmoji = risk === null ? "❓" : risk >= 7 ? "🟢" : risk >= 4 ? "🟡" : "🔴";
-
+let cmcNote;
+  if (cmc?.listed === "uncertain") {
+    cmcNote = "Unclear - check manually: https://coinmarketcap.com/search/?q=" + encodeURIComponent(address) + " (Note: CMC search can error for newer or unlisted tokens, which usually means it is not listed there yet)";
+  } else if (cmc?.listed === true) {
+    cmcNote = "Listed";
+  } else if (cmc?.listed === false) {
+    cmcNote = "Not listed";
+  } else {
+    cmcNote = "Unknown (check failed)";
+  }
   const lines = [
     `🔍 *${dex.baseToken?.name || "Unknown"} ($${symbol})*`,
     `Chain: ${dex.chainId} | Age: ${ageFromTimestamp(dex.pairCreatedAt)}`,
@@ -72,7 +81,7 @@ function buildReport(address, dex, sec, cg, cmc, athAtl, wallets, washTrading, d
      ...(athAtl?.athMarketCap ? [`📈 ATH Market Cap: ${fmtUsd(athAtl.athMarketCap)}`] : []),
      ...(athAtl?.atlMarketCap ? [`📉 ATL Market Cap: ${fmtUsd(athAtl.atlMarketCap)}`] : []),
      ...(!athAtl ? [`📊 ATH/ATL: Not available for this token yet`] : []),
-   '🟡 CoinMarketCap: ${cmc?.listed === "uncertain" ? `Unclear — check manually: https://coinmarketcap.com/search/?q=${encodeURIComponent(address)} (Note: CMC search can error for newer or unlisted tokens, which usually means it is not listed there yet)` : cmc?.listed ? "Listed ✅" : cmc?.listed === false ? "Not listed" : "Unknown (check failed)"}`,
+   🟡 CoinMarketCap: ${cmcNote}`,
     ];
 
   if (sec) {
