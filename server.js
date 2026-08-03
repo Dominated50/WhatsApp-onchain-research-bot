@@ -19,8 +19,8 @@ const { buildWalletAuditReport } = require("./services/walletAuditReport");
 const { getFlagSet, getStoredFlags, storeFlags, findNewFlags } = require("./services/digest");
 const { getAllWatchlistUsers } = require("./services/watchlist");
 const { extractTextFromImage, extractAddressFromText } = require("./services/ocr");
-const { getPriceHistoryFromBirdeye } = require("./services/birdeye");
-const { buildChartUrl } = require("./services/chart");
+const { getPriceHistoryFromBirdeye, getOhlcvFromBirdeye } = require("./services/birdeye");
+const { buildChartUrl, buildCandlestickChartUrl } = require("./services/chart");
 
 const CHAIN_ALIASES = {
   eth: "ethereum", ethereum: "ethereum",
@@ -276,18 +276,17 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
     console.log("📈 Dex data result:", dex ? "found" : "null");
     if (!dex) return sendText(from, "Couldn't find trading data for that token — check the address and try again.");
 
-    console.log("📈 Fetching price history from Birdeye, chainId:", dex.chainId);
-    const priceHistory = await getPriceHistoryFromBirdeye(address, dex.chainId, 30);
-    console.log("📈 Price history result:", priceHistory ? `${priceHistory.length} points` : "null");
-    if (!priceHistory) {
+    console.log("📈 Fetching OHLCV from Birdeye, chainId:", dex.chainId);
+    const ohlcData = await getOhlcvFromBirdeye(address, dex.chainId, 30);
+    console.log("📈 OHLCV result:", ohlcData ? `${ohlcData.length} candles` : "null");
+    if (!ohlcData) {
       return sendText(from, "Sorry, I couldn't generate a price chart for this token right now — historical data may not be available yet.");
     }
 
     const tokenName = dex.baseToken?.symbol || dex.baseToken?.name || "Token";
-    console.log("📈 Building chart URL for", tokenName);
-    const chartImageUrl = await buildChartUrl(priceHistory, tokenName);
-    console.log("📈 Chart URL length:", chartImageUrl ? chartImageUrl.length : "null");
-     console.log("📈 Chart URL:", chartImageUrl);
+    console.log("📈 Building candlestick chart URL for", tokenName);
+    const chartImageUrl = await buildCandlestickChartUrl(ohlcData, tokenName);
+    console.log("📈 Chart URL:", chartImageUrl);
     if (!chartImageUrl) return sendText(from, "Sorry, something went wrong building that chart.");
 
     console.log("📈 Sending image...");
