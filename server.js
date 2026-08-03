@@ -285,7 +285,7 @@ if (lowerText === "menu" || lowerText === "help" || lowerText === "/help") {
 
     const tokenName = dex.baseToken?.symbol || dex.baseToken?.name || "Token";
     console.log("📈 Building chart URL for", tokenName);
-    const chartImageUrl = buildChartUrl(priceHistory, tokenName);
+    const chartImageUrl = await buildChartUrl(priceHistory, tokenName);
     console.log("📈 Chart URL length:", chartImageUrl ? chartImageUrl.length : "null");
     if (!chartImageUrl) return sendText(from, "Sorry, something went wrong building that chart.");
 
