@@ -11,59 +11,101 @@ const CHAIN_TO_ID = {
   fantom: 250,
 };
 
+async function etherscanGet(params) {
+  const { data } = await axios.get("https://api.etherscan.io/v2/api", {
+    params: { ...params, apikey: process.env.ETHERSCAN_API_KEY },
+    timeout: 10000,
+  });
+  return data;
+}
+
 /**
- * Fetches recent ERC20 token transfers for a wallet on a given chain.
- * If sinceBlock is provided, only returns transfers newer than that block.
- * Returns transfers oldest-first so notifications go out in order.
+ * Fetches confirmed DEX swap transactions for a wallet on a given chain.
+ * Identifies swaps by matching decoded function names containing "swap",
+ * then pairs up the token transfers within that same transaction.
  */
-async function getWalletTokenActivity(address, chainId, sinceBlock) {
+async function getWalletSwaps(address, chainId, sinceBlock) {
   const chainNum = CHAIN_TO_ID[chainId];
   if (!chainNum) return null;
 
   try {
-    const { data } = await axios.get("https://api.etherscan.io/v2/api", {
-      params: {
+    const [txListRes, tokenTxRes] = await Promise.all([
+      etherscanGet({
+        chainid: chainNum,
+        module: "account",
+        action: "txlist",
+        address,
+        sort: "desc",
+        page: 1,
+        offset: 30,
+      }),
+      etherscanGet({
         chainid: chainNum,
         module: "account",
         action: "tokentx",
         address,
         sort: "desc",
         page: 1,
-        offset: 20,
-        apikey: process.env.ETHERSCAN_API_KEY,
-      },
-      timeout: 10000,
-    });
+        offset: 60,
+      }),
+    ]);
 
-    if (data.status !== "1" || !Array.isArray(data.result)) return [];
+    if (txListRes.status !== "1" || !Array.isArray(txListRes.result)) return [];
+    if (tokenTxRes.status !== "1" || !Array.isArray(tokenTxRes.result)) return [];
 
-    let txs = data.result;
-    if (sinceBlock) {
-      txs = txs.filter((t) => Number(t.blockNumber) > sinceBlock);
+    // Identify swap transactions by decoded function name
+    const swapHashes = new Set(
+      txListRes.result
+        .filter((tx) => (tx.functionName || "").toLowerCase().includes("swap"))
+        .filter((tx) => !sinceBlock || Number(tx.blockNumber) > sinceBlock)
+        .map((tx) => tx.hash)
+    );
+
+    if (!swapHashes.size) return [];
+
+    // Group token transfers by transaction hash
+    const transfersByHash = {};
+    for (const t of tokenTxRes.result) {
+      if (!swapHashes.has(t.hash)) continue;
+      if (!transfersByHash[t.hash]) transfersByHash[t.hash] = [];
+      transfersByHash[t.hash].push(t);
     }
 
-    txs.reverse(); // oldest first, so we notify in chronological order
+    const swaps = [];
+    for (const hash of swapHashes) {
+      const transfers = transfersByHash[hash];
+      if (!transfers || !transfers.length) continue; // swap of native token with no ERC20 leg visible yet
 
-    return txs.map((t) => {
-      const decimals = Number(t.tokenDecimal) || 18;
-      const amount = Number(t.value) / Math.pow(10, decimals);
-      const direction = t.to.toLowerCase() === address.toLowerCase() ? "buy" : "sell";
+      const sold = transfers.find((t) => t.from.toLowerCase() === address.toLowerCase());
+      const bought = transfers.find((t) => t.to.toLowerCase() === address.toLowerCase());
 
-      return {
-        hash: t.hash,
-        blockNumber: Number(t.blockNumber),
-        direction, // "buy" = received tokens, "sell" = sent tokens
-        tokenSymbol: t.tokenSymbol,
-        tokenName: t.tokenName,
-        tokenAddress: t.contractAddress,
-        amount,
-        timestamp: Number(t.timeStamp) * 1000,
-      };
-    });
+      const parentTx = txListRes.result.find((tx) => tx.hash === hash);
+
+      swaps.push({
+        hash,
+        blockNumber: Number(parentTx?.blockNumber || transfers[0].blockNumber),
+        timestamp: Number(parentTx?.timeStamp || transfers[0].timeStamp) * 1000,
+        sold: sold
+          ? {
+              symbol: sold.tokenSymbol,
+              amount: Number(sold.value) / Math.pow(10, Number(sold.tokenDecimal) || 18),
+            }
+          : { symbol: "Native", amount: null },
+        bought: bought
+          ? {
+              symbol: bought.tokenSymbol,
+              amount: Number(bought.value) / Math.pow(10, Number(bought.tokenDecimal) || 18),
+            }
+          : { symbol: "Native", amount: null },
+      });
+    }
+
+    swaps.sort((a, b) => a.blockNumber - b.blockNumber); // oldest first
+    return swaps;
   } catch (err) {
-    console.error("Etherscan wallet activity error:", err.message);
+    console.error("Etherscan swap detection error:", err.message);
     return null;
   }
 }
 
-module.exports = { getWalletTokenActivity, CHAIN_TO_ID };
+module.exports = { getWalletSwaps, CHAIN_TO_ID };
